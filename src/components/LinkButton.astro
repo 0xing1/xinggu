@@ -1,0 +1,43 @@
+---
+import type { HTMLAttributes } from "astro/types";
+
+type Props = {
+  disabled?: boolean;
+} & HTMLAttributes<"a">;
+
+const { disabled, class: className, ...attrs } = Astro.props;
+
+const Button = disabled ? "span" : "a";
+---
+
+<Button
+  aria-disabled={disabled}
+  class:list={[
+    "link-button",
+    { disabled },
+    className,
+  ]}
+  {...attrs}
+>
+  <slot />
+</Button>
+
+<style>
+  .link-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--color-text-primary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .link-button:not(.disabled):hover {
+    color: var(--color-primary);
+  }
+
+  .link-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+</style>

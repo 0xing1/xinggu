@@ -1,0 +1,228 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { UI } from '../../../i18n/translations';
+
+export async function getStaticPaths() {
+  const allPosts = await getCollection('blog', ({ data }) => !data.draft);
+  const categories = [...new Set(allPosts.map((p) => p.data.category).filter(Boolean))];
+
+  return categories.map((category) => ({
+    params: { category },
+  }));
+}
+
+const { category } = Astro.params;
+const lang = Astro.url.pathname.startsWith('/en/') ? 'en' : 'zh';
+const t = UI[lang];
+
+const allPosts = await getCollection('blog', ({ data }) => !data.draft);
+const posts = allPosts
+  .filter((p) => p.data.lang === lang && p.data.category === category)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+const pageTitle = `${category} - ${t.categories} - ${t.siteTitle}`;
+const basePath = lang === 'en' ? '/en' : '';
+const localeStr = lang === 'zh' ? 'zh-CN' : 'en-US';
+
+function getPostUrl(post: { id: string }) {
+  const slug = post.id.replace(/^(zh|en)\//, '');
+  return lang === 'en' ? `/en/blog/${slug}` : `/blog/${slug}`;
+}
+---
+
+<BaseLayout title={pageTitle} description={`${category} ${t.categories}`} lang={lang}>
+  <section class="category-detail">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href={`${basePath}/`}>{t.breadcrumbHome}</a>
+      <span class="separator" aria-hidden="true">/</span>
+      <a href={`${basePath}/blog/category`}>{t.categories}</a>
+      <span class="separator" aria-hidden="true">/</span>
+      <span class="current" aria-current="page">{category}</span>
+    </nav>
+
+    <h1>{category}</h1>
+    <p class="subtitle">{posts.length} {t.posts}</p>
+
+    {
+      posts.length > 0 ? (
+        <div class="posts-list">
+          {posts.map((post) => (
+            <article class="post-item">
+              <div class="post-content">
+                <h2>
+                  <a href={getPostUrl(post)}>{post.data.title}</a>
+                </h2>
+                <div class="post-meta">
+                  <time datetime={post.data.pubDate.toISOString()}>
+                    {post.data.pubDate.toLocaleDateString(localeStr, {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </time>
+                </div>
+                <p class="post-description">{post.data.description}</p>
+                {post.data.tags.length > 0 && (
+                  <div class="tags">
+                    {post.data.tags.map((tag) => (
+                      <a href={`${basePath}/blog/tag/${tag}`} class="tag">#{tag}</a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p class="empty">{t.noPostsInCategory}</p>
+      )
+    }
+
+    <div class="back-link">
+      <a href={`${basePath}/blog/category`}>&larr; {t.categories}</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .category-detail {
+    max-width: 50rem;
+    margin: 0 auto;
+  }
+
+  /* Breadcrumb */
+  .breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+  }
+
+  .breadcrumb a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .breadcrumb a:hover {
+    text-decoration: underline;
+  }
+
+  .breadcrumb .separator {
+    color: var(--color-text-tertiary);
+  }
+
+  .breadcrumb .current {
+    color: var(--color-text-primary);
+  }
+
+  /* Heading */
+  .category-detail h1 {
+    font-size: 2.5rem;
+    color: var(--color-text-primary);
+    margin-bottom: 0.5rem;
+    text-align: center;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: var(--color-text-secondary);
+    margin-bottom: 3rem;
+    font-size: 1.1rem;
+  }
+
+  /* Posts list */
+  .posts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .post-item {
+    padding: 1.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background-color: var(--color-bg-primary);
+    transition: box-shadow 0.2s ease;
+  }
+
+  .post-item:hover {
+    box-shadow: 0 4px 12px var(--color-shadow);
+  }
+
+  .post-content h2 {
+    margin-bottom: 0.5rem;
+    font-size: 1.3rem;
+  }
+
+  .post-content h2 a {
+    color: var(--color-text-primary);
+    text-decoration: none;
+  }
+
+  .post-content h2 a:hover {
+    color: var(--color-primary);
+  }
+
+  .post-meta {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .post-description {
+    color: var(--color-text-tertiary);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+
+  /* Tags */
+  .tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    color: var(--color-primary);
+    background-color: var(--color-primary-light);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+  }
+
+  .tag:hover {
+    background-color: var(--color-bg-tertiary);
+    text-decoration: none;
+  }
+
+  /* Back link */
+  .back-link {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .back-link a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .back-link a:hover {
+    text-decoration: underline;
+  }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    color: var(--color-text-secondary);
+    padding: 3rem;
+    font-size: 1.1rem;
+  }
+</style>

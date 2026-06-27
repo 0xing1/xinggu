@@ -1,0 +1,207 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import "@pagefind/default-ui/css/ui.css";
+import { UI } from '../../i18n/translations';
+
+const lang = 'en';
+const t = UI[lang];
+const homePath = '/en/';
+---
+
+<BaseLayout title={`${t.search} - ${t.siteTitle}`} description={t.searchDesc} lang={lang}>
+  <section class="search-page">
+    <div class="search-container">
+      <nav class="breadcrumb">
+        <a href={homePath}>{t.breadcrumbHome}</a>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+        <span>{t.search}</span>
+      </nav>
+
+      <h1 class="page-title">{t.searchArticles}</h1>
+      <p class="page-description">{t.searchDesc}</p>
+
+      <div id="pagefind-search" data-bundle-path="/pagefind/"></div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .search-page {
+    padding: 3rem 0 4rem;
+    min-height: calc(100vh - 300px);
+  }
+
+  .search-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    font-size: var(--text-sm);
+  }
+
+  .breadcrumb a {
+    color: var(--color-text-tertiary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .breadcrumb a:hover { color: var(--color-primary); }
+
+  .breadcrumb svg { color: var(--color-text-tertiary); }
+
+  .breadcrumb span {
+    color: var(--color-text-primary);
+    font-weight: 500;
+  }
+
+  .page-title {
+    font-size: var(--text-4xl);
+    font-weight: 800;
+    margin-bottom: 1rem;
+    color: var(--color-text-primary);
+  }
+
+  .page-description {
+    color: var(--color-text-secondary);
+    font-size: var(--text-lg);
+    margin-bottom: 2.5rem;
+  }
+
+  #pagefind-search {
+    --pagefind-ui-font: var(--font-sans);
+    --pagefind-ui-text: var(--color-text-primary);
+    --pagefind-ui-background: var(--color-bg-primary);
+    --pagefind-ui-border: var(--color-border);
+    --pagefind-ui-primary: var(--color-primary);
+    --pagefind-ui-tag: var(--color-bg-tertiary);
+    --pagefind-ui-border-radius: 0.75rem;
+    --pagefind-ui-border-width: 1px;
+  }
+
+  #pagefind-search :global(input) {
+    font-size: var(--text-lg) !important;
+    padding: 1rem 1.5rem !important;
+    border-radius: var(--radius-xl) !important;
+    border: 2px solid var(--color-border) !important;
+    background: var(--color-bg-primary) !important;
+    color: var(--color-text-primary) !important;
+  }
+
+  #pagefind-search :global(input:focus) {
+    outline: none !important;
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 3px var(--color-shadow) !important;
+  }
+
+  #pagefind-search :global(.pagefind-ui__result) {
+    padding: 1rem !important;
+    border-bottom: 1px solid var(--color-border) !important;
+  }
+
+  #pagefind-search :global(.pagefind-ui__result-title a) {
+    color: var(--color-primary) !important;
+    font-weight: 600 !important;
+    font-size: var(--text-lg) !important;
+    text-decoration: none !important;
+  }
+
+  #pagefind-search :global(.pagefind-ui__result-title a:hover) {
+    text-decoration: underline !important;
+  }
+
+  #pagefind-search :global(.pagefind-ui__result-excerpt) {
+    color: var(--color-text-secondary) !important;
+    font-size: var(--text-sm) !important;
+    margin-top: 0.5rem !important;
+  }
+
+  #pagefind-search :global(mark) {
+    background-color: var(--color-primary-light) !important;
+    color: var(--color-primary) !important;
+    padding: 0 2px !important;
+    border-radius: 2px !important;
+  }
+</style>
+
+<script>
+  function initSearch() {
+    const searchElement = document.querySelector("#pagefind-search");
+    if (!searchElement) return;
+
+    const bundlePath = (searchElement as HTMLElement).dataset.bundlePath;
+    if (!bundlePath) return;
+
+    const onIdle = window.requestIdleCallback || ((cb: Function) => setTimeout(cb, 1));
+
+    onIdle(async () => {
+      try {
+        // @ts-expect-error - Pagefind types
+        const { PagefindUI } = await import("@pagefind/default-ui");
+
+        if (import.meta.env.DEV) {
+          searchElement.innerHTML = `
+            <div style="text-align: center; padding: 2rem; color: var(--color-text-secondary);">
+              <p><strong>Dev mode: Search requires a build first.</strong></p>
+              <code style="display: block; margin-top: 1rem; padding: 0.75rem; background: var(--color-bg-tertiary); border-radius: 0.5rem;">npm run build</code>
+            </div>
+          `;
+          return;
+        }
+
+        const search = new PagefindUI({
+          element: "#pagefind-search",
+          bundlePath: bundlePath,
+          showImages: false,
+          showSubResults: true,
+          processTerm: function (term: string) {
+            const params = new URLSearchParams(window.location.search);
+            params.set("q", term);
+            history.replaceState(history.state, "", "?" + params.toString());
+            return term;
+          },
+        });
+
+        const params = new URLSearchParams(window.location.search);
+        const query = params.get("q");
+        if (query) {
+          search.triggerSearch(query);
+        }
+
+        const searchInput = document.querySelector(".pagefind-ui__search-input");
+        const clearButton = document.querySelector(".pagefind-ui__search-clear");
+        searchInput?.addEventListener("input", (e: Event) => {
+          if ((e.target as HTMLInputElement)?.value.trim() === "") {
+            history.replaceState(history.state, "", window.location.pathname);
+          }
+        });
+        clearButton?.addEventListener("click", () => {
+          history.replaceState(history.state, "", window.location.pathname);
+        });
+      } catch (e) {
+        console.error("Pagefind failed to load:", e);
+        searchElement.innerHTML = `
+          <div style="text-align: center; padding: 2rem; color: var(--color-text-secondary);">
+            <p>Search requires a build first.</p>
+            <code style="display: block; margin-top: 1rem; padding: 0.75rem; background: var(--color-bg-tertiary); border-radius: 0.5rem;">npm run build</code>
+          </div>
+        `;
+      }
+    });
+  }
+
+  initSearch();
+
+  document.addEventListener("astro:after-swap", () => {
+    const pagefindSearch = document.querySelector("#pagefind-search");
+    if (pagefindSearch && pagefindSearch.querySelector("form")) return;
+    initSearch();
+  });
+</script>

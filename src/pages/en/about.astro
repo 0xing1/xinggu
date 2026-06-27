@@ -1,0 +1,753 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { UI } from '../../i18n/translations';
+import { SITE } from '../../config';
+
+const lang = 'en';
+const t = UI[lang];
+const prefix = '/en';
+
+// Get stats from published posts
+const allPosts = await getCollection('blog', ({ data }) => {
+  return data.lang === lang && !data.draft;
+});
+const categories = [...new Set(allPosts.map(p => p.data.category).filter(Boolean))];
+const allTags = [...new Set(allPosts.flatMap(p => p.data.tags))];
+
+// All text in English
+const p = {
+  greeting: 'Hello, I am',
+  role: 'a Developer',
+  subtitle: 'Full-Stack Developer / Open Source Enthusiast / Tech Blogger',
+  bio: 'Passionate about technology, focusing on web development and modern frontend tech. Here I share technical insights, learnings, and project experiences.',
+  viewArticles: 'View Articles',
+  contactMe: 'Contact Me',
+  yearsExp: 'years exp',
+  techStack: 'Tech Stack',
+  techStackDesc: 'Tools and technologies I use',
+  frontend: 'Frontend',
+  backend: 'Backend',
+  database: 'Database',
+  devTools: 'Dev Tools',
+  workExperience: 'Work Experience',
+  workExpDesc: 'My career journey',
+  present: 'Present',
+  contactTitle: 'Contact Me',
+  contactDesc: 'If you have any questions, suggestions, or collaboration ideas, feel free to reach out.',
+  email: 'Email',
+  statsPosts: 'Articles',
+  statsCategories: 'Categories',
+  statsTags: 'Tags',
+};
+---
+
+<BaseLayout title={t.aboutTitle} description={t.aboutDesc} lang={lang}>
+  <!-- Hero Section -->
+  <section class="about-hero">
+    <div class="container">
+      <div class="hero-content">
+        <div class="avatar-container">
+          <div class="avatar">
+            <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="60" cy="60" r="60" fill="url(#avatar-gradient)"/>
+              <circle cx="60" cy="45" r="20" fill="white" opacity="0.9"/>
+              <path d="M30 95C30 75 45 60 60 60C75 60 90 75 90 95" fill="white" opacity="0.9"/>
+              <defs>
+                <linearGradient id="avatar-gradient" x1="0" y1="0" x2="120" y2="120">
+                  <stop stop-color="var(--color-primary)"/>
+                  <stop offset="1" stop-color="var(--color-secondary)"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div class="avatar-badge">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="hero-text">
+          <h1>{p.greeting}<span class="gradient-text">{p.role}</span></h1>
+          <p class="subtitle">{p.subtitle}</p>
+          <p class="bio">{p.bio}</p>
+
+          <div class="hero-actions">
+            <a href={`${prefix}/blog`} class="btn btn-primary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              </svg>
+              {p.viewArticles}
+            </a>
+            <a href="mailto:hello@example.com" class="btn btn-outline">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              {p.contactMe}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="stats-section">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            </svg>
+          </div>
+          <span class="stat-number">{allPosts.length}+</span>
+          <span class="stat-label">{p.statsPosts}</span>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+          <span class="stat-number">{categories.length}+</span>
+          <span class="stat-label">{p.statsCategories}</span>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+              <line x1="7" y1="7" x2="7.01" y2="7"/>
+            </svg>
+          </div>
+          <span class="stat-number">{allTags.length}+</span>
+          <span class="stat-label">{p.statsTags}</span>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <span class="stat-number">2+</span>
+          <span class="stat-label">{p.yearsExp}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Skills Section -->
+  <section class="skills-section">
+    <div class="container">
+      <h2 class="section-title">{p.techStack}</h2>
+      <p class="section-description">{p.techStackDesc}</p>
+
+      <div class="skills-grid">
+        <div class="skill-category">
+          <h3>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+              <polyline points="2 17 12 22 22 17"/>
+              <polyline points="2 12 12 17 22 12"/>
+            </svg>
+            {p.frontend}
+          </h3>
+          <div class="skill-tags">
+            <span class="skill-tag">React</span>
+            <span class="skill-tag">Vue</span>
+            <span class="skill-tag">Astro</span>
+            <span class="skill-tag">TypeScript</span>
+            <span class="skill-tag">Next.js</span>
+            <span class="skill-tag">Tailwind CSS</span>
+          </div>
+        </div>
+
+        <div class="skill-category">
+          <h3>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+            {p.backend}
+          </h3>
+          <div class="skill-tags">
+            <span class="skill-tag">Node.js</span>
+            <span class="skill-tag">Python</span>
+            <span class="skill-tag">Go</span>
+            <span class="skill-tag">Express</span>
+            <span class="skill-tag">FastAPI</span>
+          </div>
+        </div>
+
+        <div class="skill-category">
+          <h3>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="12" cy="5" rx="9" ry="3"/>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+            </svg>
+            {p.database}
+          </h3>
+          <div class="skill-tags">
+            <span class="skill-tag">PostgreSQL</span>
+            <span class="skill-tag">MongoDB</span>
+            <span class="skill-tag">Redis</span>
+            <span class="skill-tag">Supabase</span>
+          </div>
+        </div>
+
+        <div class="skill-category">
+          <h3>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+            {p.devTools}
+          </h3>
+          <div class="skill-tags">
+            <span class="skill-tag">Git</span>
+            <span class="skill-tag">Docker</span>
+            <span class="skill-tag">VS Code</span>
+            <span class="skill-tag">Linux</span>
+            <span class="skill-tag">CI/CD</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Experience Section -->
+  <section class="experience-section">
+    <div class="container">
+      <h2 class="section-title">{p.workExperience}</h2>
+      <p class="section-description">{p.workExpDesc}</p>
+
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <h3>Senior Frontend Engineer</h3>
+              <span class="timeline-date">2024 - {p.present}</span>
+            </div>
+            <p class="timeline-company">A Tech Company</p>
+            <p class="timeline-description">
+              Led frontend architecture design and development for core products, guiding the team through multiple key projects. Optimized the frontend build pipeline, improving development efficiency and code quality.
+            </p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <h3>Full-Stack Developer</h3>
+              <span class="timeline-date">2022 - 2024</span>
+            </div>
+            <p class="timeline-company">An Internet Company</p>
+            <p class="timeline-description">
+              Contributed to multiple projects, handling both frontend and backend development. Built several high-availability web applications using React and Node.js.
+            </p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <h3>Frontend Developer Intern</h3>
+              <span class="timeline-date">2021 - 2022</span>
+            </div>
+            <p class="timeline-company">A Startup</p>
+            <p class="timeline-description">
+              Learned and practiced frontend development, contributing to the company website and internal tools. Gained familiarity with modern frontend workflows and toolchains.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section class="contact-section">
+    <div class="container">
+      <div class="contact-content">
+        <h2>{p.contactTitle}</h2>
+        <p>{p.contactDesc}</p>
+
+        <div class="contact-methods">
+          <a href="mailto:hello@example.com" class="contact-card">
+            <div class="contact-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+            </div>
+            <h3>{p.email}</h3>
+            <p>hello@example.com</p>
+          </a>
+
+          <a href="https://github.com/username" target="_blank" rel="noopener noreferrer" class="contact-card">
+            <div class="contact-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              </svg>
+            </div>
+            <h3>GitHub</h3>
+            <p>github.com/username</p>
+          </a>
+
+          <a href="https://twitter.com/username" target="_blank" rel="noopener noreferrer" class="contact-card">
+            <div class="contact-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+            </div>
+            <h3>Twitter</h3>
+            <p>@username</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* Hero Section */
+  .about-hero {
+    padding: var(--space-16) 0 var(--space-12);
+    background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-bg-tertiary) 100%);
+  }
+
+  .hero-content {
+    display: flex;
+    align-items: center;
+    gap: var(--space-12);
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .avatar-container {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .avatar {
+    width: 150px;
+    height: 150px;
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    border: 4px solid var(--color-bg-primary);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .avatar-badge {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 36px;
+    height: 36px;
+    background-color: var(--color-success);
+    color: white;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid var(--color-bg-primary);
+  }
+
+  .hero-text h1 {
+    font-size: var(--text-4xl);
+    margin-bottom: var(--space-2);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: var(--text-lg);
+    color: var(--color-primary);
+    font-weight: 600;
+    margin-bottom: var(--space-4);
+  }
+
+  .bio {
+    font-size: var(--text-base);
+    color: var(--color-text-secondary);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-6);
+    max-width: 500px;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: var(--space-4);
+  }
+
+  /* Stats Section */
+  .stats-section {
+    padding: var(--space-12) 0;
+    background-color: var(--color-bg-primary);
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-6);
+  }
+
+  .stat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-6);
+    background-color: var(--color-bg-secondary);
+    border-radius: var(--radius-xl);
+    transition: all var(--transition-base);
+  }
+
+  .stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .stat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+    border-radius: var(--radius-xl);
+    margin-bottom: var(--space-4);
+  }
+
+  .stat-number {
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: var(--space-1);
+  }
+
+  .stat-label {
+    font-size: var(--text-sm);
+    color: var(--color-text-tertiary);
+  }
+
+  /* Skills Section */
+  .skills-section {
+    padding: var(--space-16) 0;
+  }
+
+  .section-title {
+    font-size: var(--text-3xl);
+    text-align: center;
+    margin-bottom: var(--space-2);
+  }
+
+  .section-description {
+    text-align: center;
+    color: var(--color-text-tertiary);
+    margin-bottom: var(--space-10);
+  }
+
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-6);
+  }
+
+  .skill-category {
+    padding: var(--space-6);
+    background-color: var(--color-bg-secondary);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border);
+  }
+
+  .skill-category h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-4);
+    color: var(--color-text-primary);
+  }
+
+  .skill-category h3 svg {
+    color: var(--color-primary);
+  }
+
+  .skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .skill-tag {
+    padding: var(--space-2) var(--space-4);
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-border);
+  }
+
+  /* Experience Section */
+  .experience-section {
+    padding: var(--space-16) 0;
+    background-color: var(--color-bg-secondary);
+  }
+
+  .timeline {
+    max-width: 700px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: var(--color-border);
+  }
+
+  .timeline-item {
+    position: relative;
+    padding-left: 60px;
+    margin-bottom: var(--space-8);
+  }
+
+  .timeline-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .timeline-dot {
+    position: absolute;
+    left: 12px;
+    top: 8px;
+    width: 18px;
+    height: 18px;
+    background-color: var(--color-primary);
+    border-radius: var(--radius-full);
+    border: 3px solid var(--color-bg-secondary);
+  }
+
+  .timeline-content {
+    background-color: var(--color-bg-primary);
+    padding: var(--space-6);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border);
+  }
+
+  .timeline-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-2);
+  }
+
+  .timeline-header h3 {
+    font-size: var(--text-lg);
+    margin-bottom: 0;
+  }
+
+  .timeline-date {
+    font-size: var(--text-sm);
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  .timeline-company {
+    font-size: var(--text-sm);
+    color: var(--color-text-tertiary);
+    margin-bottom: var(--space-3);
+  }
+
+  .timeline-description {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    line-height: var(--leading-relaxed);
+    margin: 0;
+  }
+
+  /* Contact Section */
+  .contact-section {
+    padding: var(--space-16) 0;
+  }
+
+  .contact-content {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .contact-content h2 {
+    font-size: var(--text-3xl);
+    margin-bottom: var(--space-4);
+  }
+
+  .contact-content > p {
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-10);
+  }
+
+  .contact-methods {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+  }
+
+  .contact-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-8);
+    background-color: var(--color-bg-secondary);
+    border-radius: var(--radius-xl);
+    text-decoration: none;
+    transition: all var(--transition-base);
+    border: 1px solid var(--color-border);
+  }
+
+  .contact-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .contact-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+    border-radius: var(--radius-full);
+    margin-bottom: var(--space-4);
+  }
+
+  .contact-card:hover .contact-icon {
+    background-color: var(--color-primary);
+    color: white;
+  }
+
+  .contact-card h3 {
+    font-size: var(--text-base);
+    margin-bottom: var(--space-2);
+    color: var(--color-text-primary);
+  }
+
+  .contact-card p {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+
+  /* Button styles */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-size: var(--text-base);
+    font-weight: 600;
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+    border: none;
+  }
+
+  .btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    color: white;
+  }
+
+  .btn-outline {
+    background-color: transparent;
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+  }
+
+  .btn-outline:hover {
+    background-color: var(--color-primary);
+    color: white;
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .skills-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .hero-content {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .hero-text h1 {
+      font-size: var(--text-3xl);
+    }
+
+    .bio {
+      max-width: none;
+    }
+
+    .hero-actions {
+      justify-content: center;
+    }
+
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .timeline-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-1);
+    }
+
+    .contact-methods {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .hero-actions {
+      flex-direction: column;
+    }
+  }
+</style>

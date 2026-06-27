@@ -1,0 +1,93 @@
+---
+import LinkButton from "./LinkButton.astro";
+
+export interface Props {
+  prevUrl?: string | undefined;
+  nextUrl?: string | undefined;
+  currentPage: number;
+  totalPages: number;
+  lang?: "zh" | "en";
+}
+
+const { prevUrl, nextUrl, currentPage, totalPages, lang = "zh" } = Astro.props;
+---
+
+{
+  totalPages > 1 && (
+    <nav class="pagination" role="navigation" aria-label="Pagination Navigation">
+      <LinkButton
+        disabled={!prevUrl}
+        href={prevUrl as string}
+        class:list={["pagination-btn", { disabled: !prevUrl }]}
+        aria-label={lang === "zh" ? "上一页" : "Go to previous page"}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+        {lang === "zh" ? "上一页" : "Prev"}
+      </LinkButton>
+
+      <span class="pagination-info">
+        {currentPage} / {totalPages}
+      </span>
+
+      <LinkButton
+        disabled={!nextUrl}
+        href={nextUrl as string}
+        class:list={["pagination-btn", { disabled: !nextUrl }]}
+        aria-label={lang === "zh" ? "下一页" : "Go to next page"}
+      >
+        {lang === "zh" ? "下一页" : "Next"}
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </LinkButton>
+    </nav>
+  )
+}
+
+<style>
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 3rem;
+    margin-bottom: 2rem;
+  }
+
+  .pagination-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    background-color: var(--color-bg-primary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+  }
+
+  .pagination-btn:not(.disabled):hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background-color: var(--color-primary-light);
+  }
+
+  .pagination-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .pagination-info {
+    font-size: var(--text-sm);
+    color: var(--color-text-tertiary);
+    font-weight: 500;
+    min-width: 60px;
+    text-align: center;
+  }
+</style>
