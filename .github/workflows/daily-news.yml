@@ -37,7 +37,7 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add src/content/blog/zh/news/ src/content/blog/en/news/
+          git add src/content/blog/
           git commit -m "📰 Daily news update $(date +'%Y-%m-%d')"
           git push
 
@@ -46,8 +46,9 @@ jobs:
 
       - name: Deploy to Cloudflare Pages
         if: steps.changes.outputs.has_changes != '0'
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=xinggu-blog
+          projectName: xinggu-blog
+          directory: dist
