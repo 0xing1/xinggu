@@ -1,0 +1,64 @@
+---
+export interface Props {
+  tag: string;
+  size?: "sm" | "lg";
+  lang?: "zh" | "en";
+}
+
+const { tag, size = "sm", lang = "zh" } = Astro.props;
+---
+
+<li>
+  <a
+    href={`/${lang === 'en' ? 'en/' : ''}blog/tag/${tag}`}
+    class:list={[
+      "tag-link",
+      { "text-sm": size === "sm" },
+      { "text-lg": size === "lg" },
+    ]}
+  >
+    <svg
+      width={size === "lg" ? 20 : 16}
+      height={size === "lg" ? 20 : 16}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <line x1="4" y1="9" x2="20" y2="9" />
+      <line x1="4" y1="15" x2="20" y2="15" />
+      <line x1="10" y1="3" x2="8" y2="21" />
+      <line x1="16" y1="3" x2="14" y2="21" />
+    </svg>
+    {tag}
+  </a>
+</li>
+
+<style>
+  .tag-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    border-bottom: 2px dashed var(--color-border);
+    padding-bottom: 2px;
+    transition: all var(--transition-fast);
+  }
+
+  .tag-link:hover {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+    transform: translateY(-2px);
+  }
+
+  .tag-link svg {
+    opacity: 0.7;
+  }
+
+  .tag-link:hover svg {
+    opacity: 1;
+  }
+</style>

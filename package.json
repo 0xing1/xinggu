@@ -1,0 +1,26 @@
+{
+  "name": "astro-blog",
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "news": "node scripts/fetch-news.js",
+    "news:daily": "node scripts/fetch-news.js --daily",
+    "postbuild": "npx pagefind --site dist"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^4.0.0",
+    "@astrojs/rss": "^4.0.0",
+    "@astrojs/sitemap": "^3.0.0",
+    "@pagefind/default-ui": "^1.5.2",
+    "astro": "^6.0.0",
+    "pagefind": "^1.5.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

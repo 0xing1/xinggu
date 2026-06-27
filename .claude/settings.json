@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(mkdir -p d:/claudeone/.claude/skills)",
+      "Bash(curl -s http://localhost:4321)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:4321/search)",
+      "Bash(sed -i 's|href={`https://xinggu.com\\\\${\\\\s*currentPath}\\\\s*`}|href={new URL\\(currentPath, Astro.site\\).href}|g' src/layouts/BaseLayout.astro)",
+      "Bash(sed -i \"s|href={\\\\`https://xinggu.com/en\\\\${currentPath}\\\\`}|href={new URL\\('/en' + currentPath, Astro.site\\).href}|g\" src/layouts/BaseLayout.astro)",
+      "Bash(sed -i 's|</BaseLayout>|{showLogin ? \"\" : \"\"}\\\\n</BaseLayout>|' src/pages/admin/index.astro)",
+      "Bash(sed -i '897s|{showLogin ? \"\" : \"\"}|  \\)}|' src/pages/admin/index.astro)",
+      "Bash(sed -i '950s/\\\\t/  /' src/pages/admin/index.astro)",
+      "Bash(sed -i '951,959s/\\\\t\\\\t/    /' src/pages/admin/index.astro)",
+      "Bash(sed -i '951,959s/\\\\t/  /' src/pages/admin/index.astro)",
+      "Bash(start http://localhost:4326/)",
+      "Bash(git config *)",
+      "Bash(gh auth *)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git rm *)"
+    ],
+    "additionalDirectories": [
+      "d:\\claudeone\\.claude\\skills"
+    ]
+  }
+}

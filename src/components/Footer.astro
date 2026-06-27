@@ -1,0 +1,212 @@
+---
+import Socials from "./Socials.astro";
+import { SITE } from "../config";
+
+export interface Props {
+  lang?: "zh" | "en";
+}
+
+const { lang = "zh" } = Astro.props;
+const currentYear = new Date().getFullYear();
+
+const linkGroups = lang === "zh"
+  ? {
+      content: { label: "内容", links: [
+        { href: "/blog", label: "博客" },
+        { href: "/blog/category", label: "分类" },
+        { href: "/blog/tag", label: "标签" },
+        { href: "/archives", label: "归档" },
+      ]},
+      about: { label: "关于", links: [
+        { href: "/about", label: "关于我" },
+        { href: "/search", label: "搜索" },
+        { href: "/rss.xml", label: "RSS" },
+      ]},
+    }
+  : {
+      content: { label: "Content", links: [
+        { href: "/en/blog", label: "Blog" },
+        { href: "/en/blog/category", label: "Categories" },
+        { href: "/en/blog/tag", label: "Tags" },
+        { href: "/en/archives", label: "Archives" },
+      ]},
+      about: { label: "About", links: [
+        { href: "/en/about", label: "About Me" },
+        { href: "/en/search", label: "Search" },
+        { href: "/en/rss.xml", label: "RSS" },
+      ]},
+    };
+
+const switchLang = lang === "zh" ? "en" : "zh";
+const switchLabel = lang === "zh" ? "English" : "中文";
+const switchHref = lang === "zh" ? "/en/" : "/";
+---
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href={lang === "en" ? "/en/" : "/"} class="footer-logo">{SITE.title}</a>
+        <p class="footer-desc">{lang === "zh" ? "分享前端开发、编程技巧和技术见解" : "Sharing frontend development, programming tips, and technical insights."}</p>
+        <Socials />
+      </div>
+
+      {Object.values(linkGroups).map(group => (
+        <div class="footer-links">
+          <h4 class="footer-heading">{group.label}</h4>
+          <ul>
+            {group.links.map(link => (
+              <li><a href={link.href}>{link.label}</a></li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+
+    <div class="footer-bottom">
+      <div class="footer-copyright">
+        <span>&copy; {currentYear} <a href={lang === "en" ? "/en/about" : "/about"}>{SITE.author}</a></span>
+        <span class="footer-separator">|</span>
+        <span>
+          {lang === "zh" ? "基于" : "Built with"}
+          <a href="https://astro.build" target="_blank" rel="noopener noreferrer">Astro</a>
+        </span>
+      </div>
+      <a href={switchHref} class="lang-switch" title={switchLabel}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+        {switchLabel}
+      </a>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    margin-top: auto;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-bg-secondary);
+  }
+
+  .footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 1.5rem;
+  }
+
+  .footer-top {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .footer-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .footer-logo {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    text-decoration: none;
+  }
+  .footer-logo:hover { color: var(--color-primary); }
+
+  .footer-desc {
+    font-size: var(--text-sm);
+    color: var(--color-text-tertiary);
+    margin: 0;
+    max-width: 300px;
+    line-height: var(--leading-relaxed);
+  }
+
+  .footer-links h4 {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .footer-links ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .footer-links a {
+    font-size: var(--text-sm);
+    color: var(--color-text-tertiary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+  .footer-links a:hover { color: var(--color-primary); }
+
+  .footer-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .footer-copyright {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: var(--text-sm);
+    color: var(--color-text-tertiary);
+    flex-wrap: wrap;
+  }
+
+  .footer-copyright a {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+  .footer-copyright a:hover { color: var(--color-primary); }
+
+  .footer-separator { color: var(--color-border); }
+
+  .lang-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+  }
+  .lang-switch:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+  }
+
+  @media (max-width: 768px) {
+    .footer-top {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    .footer-bottom {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>

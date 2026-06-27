@@ -1,0 +1,239 @@
+---
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE } from '../config';
+import '../styles/global.css';
+
+export interface Props {
+  title?: string;
+  description?: string;
+  lang?: 'zh' | 'en';
+  ogImage?: string;
+  canonicalURL?: string;
+}
+
+const {
+  title = SITE.title,
+  description = SITE.desc,
+  lang = 'zh',
+  ogImage = SITE.ogImage,
+  canonicalURL = new URL(Astro.url.pathname, Astro.site).href,
+} = Astro.props;
+
+const socialImageURL = new URL(ogImage, Astro.site ?? Astro.url);
+const currentPath = Astro.url.pathname;
+
+// Generate breadcrumbs for structured data
+const pathSegments = currentPath.split('/').filter(Boolean);
+const breadcrumbs = [
+  {
+    "@type": "ListItem",
+    "position": 1,
+    "name": lang === 'zh' ? '首页' : 'Home',
+    "item": new URL(lang === 'en' ? '/en' : '', Astro.site).href
+  },
+  ...pathSegments.map((segment, index) => ({
+    "@type": "ListItem",
+    "position": index + 2,
+    "name": segment.charAt(0).toUpperCase() + segment.slice(1),
+    "item": new URL(`${lang === 'en' ? '/en' : ''}/${pathSegments.slice(0, index + 1).join('/')}`, Astro.site).href
+  }))
+];
+---
+
+<!DOCTYPE html>
+<html
+  dir="ltr"
+  lang={lang}
+  class="overflow-y-scroll scroll-smooth"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta name="author" content={SITE.author} />
+    <meta name="theme-color" content="" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href={canonicalURL} />
+
+    <!-- hreflang tags for i18n -->
+    <link rel="alternate" hreflang="zh" href={new URL(currentPath, Astro.site).href} />
+    <link rel="alternate" hreflang="en" href={new URL('/en' + currentPath, Astro.site).href} />
+    <link rel="alternate" hreflang="x-default" href={new URL(currentPath, Astro.site).href} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.title} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:image" content={socialImageURL} />
+
+    <!-- Twitter / X -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={canonicalURL} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <meta property="twitter:image" content={socialImageURL} />
+
+    <!-- RSS autodiscovery -->
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={SITE.title}
+      href={new URL(lang === "en" ? "/en/rss.xml" : "/rss.xml", Astro.site)}
+    />
+
+    <!-- Sitemap -->
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <!-- BreadcrumbList Schema -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": breadcrumbs
+    })} />
+
+    <!-- Extra head content from child pages -->
+    <slot name="head" />
+
+    <title>{title}</title>
+
+    <!--
+      Anti-FOUC script: sets data-theme on <html> before the browser paints.
+      Runs synchronously, no defer/async.
+    -->
+    <script is:inline>
+      (function () {
+        const stored = localStorage.getItem("theme");
+        const prefersDark = window.matchMedia(
+          "(prefers-color-scheme: dark)"
+        ).matches;
+        const theme = stored ?? (prefersDark ? "dark" : "light");
+        const root = document.firstElementChild;
+        root?.setAttribute("data-theme", theme);
+        root?.classList.toggle("dark", theme === "dark");
+        // Expose value so theme.ts can skip re-detection.
+        window.__theme = { value: theme };
+      })();
+    </script>
+  </head>
+  <body class="body">
+    <Header lang={lang} />
+
+    <main id="main-content">
+      <slot />
+    </main>
+
+    <Footer lang={lang} />
+
+    <!-- Back to top button -->
+    <button id="back-to-top" class="back-to-top" aria-label={lang === 'zh' ? '回到顶部' : 'Back to top'}>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="19" x2="12" y2="5"/>
+        <polyline points="5 12 12 5 19 12"/>
+      </svg>
+    </button>
+
+    <script>
+      // Back to top button
+      function setupBackToTop() {
+        const backToTop = document.getElementById("back-to-top");
+        if (!backToTop) return;
+
+        const handleScroll = () => {
+          if (window.scrollY > 300) {
+            backToTop.classList.add("visible");
+          } else {
+            backToTop.classList.remove("visible");
+          }
+        };
+
+        let ticking = false;
+        window.addEventListener("scroll", () => {
+          if (!ticking) {
+            window.requestAnimationFrame(() => {
+              handleScroll();
+              ticking = false;
+            });
+            ticking = true;
+          }
+        });
+
+        backToTop.addEventListener("click", () => {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+      }
+
+      setupBackToTop();
+
+      document.addEventListener("astro:after-swap", () => {
+        setupBackToTop();
+      });
+    </script>
+
+    <style>
+      .body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        background-color: var(--color-bg-primary);
+        color: var(--color-text-primary);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+
+      main {
+        flex: 1;
+      }
+
+      /* Back to top button */
+      .back-to-top {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 48px;
+        height: 48px;
+        background-color: var(--color-primary);
+        color: white;
+        border: none;
+        border-radius: 9999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        opacity: 0;
+        visibility: hidden;
+        transition: all var(--transition-base);
+        box-shadow: var(--shadow-lg);
+        z-index: 1030;
+      }
+
+      .back-to-top.visible {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .back-to-top:hover {
+        background-color: var(--color-primary-hover);
+        transform: translateY(-2px);
+      }
+
+      @media (max-width: 768px) {
+        .back-to-top {
+          bottom: 1rem;
+          right: 1rem;
+          width: 40px;
+          height: 40px;
+        }
+      }
+    </style>
+  </body>
+</html>

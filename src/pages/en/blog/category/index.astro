@@ -1,0 +1,171 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { UI } from '../../../../i18n/translations';
+
+const lang = 'en';
+const t = UI[lang];
+
+const allPosts = await getCollection('blog', ({ data }) => !data.draft);
+const posts = allPosts.filter((p) => p.data.lang === lang);
+
+// Extract categories with counts
+const categoryMap = posts.reduce((acc, post) => {
+  const category = post.data.category;
+  if (category) {
+    acc[category] = (acc[category] || 0) + 1;
+  }
+  return acc;
+}, {} as Record<string, number>);
+
+const sortedCategories = Object.entries(categoryMap).sort((a, b) => b[1] - a[1]);
+
+const pageTitle = `${t.categoriesTitle} - ${t.siteTitle}`;
+const basePath = '/en';
+---
+
+<BaseLayout title={pageTitle} description={t.categoriesDesc} lang={lang}>
+  <section class="categories-page">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href={`${basePath}/`}>{t.breadcrumbHome}</a>
+      <span class="separator" aria-hidden="true">/</span>
+      <span class="current" aria-current="page">{t.categories}</span>
+    </nav>
+
+    <h1>{t.categoriesTitle}</h1>
+    <p class="subtitle">{t.categoriesDesc}</p>
+
+    {
+      sortedCategories.length > 0 ? (
+        <div class="categories-grid">
+          {sortedCategories.map(([category, count]) => (
+            <a
+              href={`${basePath}/blog/category/${category}`}
+              class="category-card"
+            >
+              <span class="folder-icon" aria-hidden="true">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                </svg>
+              </span>
+              <h2>{category}</h2>
+              <span class="count">{count} {t.posts}</span>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="empty">{t.noPosts}</p>
+      )
+    }
+  </section>
+</BaseLayout>
+
+<style>
+  .categories-page {
+    max-width: 50rem;
+    margin: 0 auto;
+  }
+
+  /* Breadcrumb */
+  .breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+  }
+
+  .breadcrumb a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .breadcrumb a:hover {
+    text-decoration: underline;
+  }
+
+  .breadcrumb .separator {
+    color: var(--color-text-tertiary);
+  }
+
+  .breadcrumb .current {
+    color: var(--color-text-primary);
+  }
+
+  /* Heading */
+  .categories-page h1 {
+    font-size: 2.5rem;
+    color: var(--color-text-primary);
+    margin-bottom: 0.5rem;
+    text-align: center;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: var(--color-text-secondary);
+    margin-bottom: 3rem;
+    font-size: 1.1rem;
+  }
+
+  /* Categories grid */
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .category-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1.5rem;
+    background-color: var(--color-bg-secondary);
+    border-radius: 12px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+  }
+
+  .category-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--color-primary);
+    box-shadow: 0 8px 24px var(--color-shadow);
+    text-decoration: none;
+  }
+
+  .folder-icon {
+    color: var(--color-primary);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+  }
+
+  .category-card:hover .folder-icon {
+    color: var(--color-primary);
+  }
+
+  .category-card h2 {
+    font-size: 1.25rem;
+    color: var(--color-text-primary);
+    margin-bottom: 0.5rem;
+    text-align: center;
+    word-break: break-word;
+  }
+
+  .category-card .count {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+  }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    color: var(--color-text-secondary);
+    padding: 3rem;
+    font-size: 1.1rem;
+  }
+</style>

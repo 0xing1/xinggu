@@ -1,0 +1,428 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Card from '../../../components/Card.astro';
+import Pagination from '../../../components/Pagination.astro';
+import { getCollection } from 'astro:content';
+import { SITE } from '../../../config';
+import { UI } from '../../../i18n/translations';
+
+export async function getStaticPaths() {
+  const allPosts = await getCollection('blog', ({ data }) => data.lang === 'en' && !data.draft);
+  const sortedPosts = allPosts.sort(
+    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+  );
+  const totalPages = Math.ceil(sortedPosts.length / SITE.postPerPage);
+
+  if (totalPages === 0) {
+    return [{ params: { page: undefined }, props: { page: 1, totalPages: 0 } }];
+  }
+
+  return Array.from({ length: totalPages }, (_, i) => ({
+    params: { page: i === 0 ? undefined : String(i + 1) },
+    props: { page: i + 1, totalPages },
+  }));
+}
+
+const { page = 1, totalPages } = Astro.props;
+
+const lang = 'en';
+const t = UI[lang];
+
+const allPosts = await getCollection('blog', ({ data }) => data.lang === 'en' && !data.draft);
+const sortedPosts = allPosts.sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+
+const start = (page - 1) * SITE.postPerPage;
+const end = start + SITE.postPerPage;
+const paginatedPosts = sortedPosts.slice(start, end);
+
+const categories = [...new Set(allPosts.map((post) => post.data.category).filter(Boolean))];
+const allTags = allPosts.flatMap((post) => post.data.tags ?? []);
+const uniqueTags = [...new Set(allTags)];
+
+const prevUrl = page > 1 ? (page === 2 ? '/en/blog/' : `/en/blog/${page - 1}/`) : undefined;
+const nextUrl = page < totalPages ? `/en/blog/${page + 1}/` : undefined;
+
+const pageTitle = page === 1 ? `${t.blog} - ${t.siteTitle}` : `${t.blog} ${t.allPosts} (${page}/${totalPages}) - ${t.siteTitle}`;
+const pageDescription = page === 1
+  ? `${t.blogStats} - ${sortedPosts.length} ${t.posts}, ${categories.length} ${t.categoryCount}, ${uniqueTags.length} ${t.tagCount}`
+  : `${t.blog} ${t.allPosts} - ${t.allPosts} ${page} / ${totalPages}`;
+---
+
+<BaseLayout title={pageTitle} description={pageDescription} lang={lang}>
+  <!-- Page Header -->
+  <section class="page-header">
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href="/en/">{t.breadcrumbHome}</a>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+        <span>{t.blog}</span>
+      </nav>
+
+      <h1 class="page-title">{t.allPosts}</h1>
+      <p class="page-description">{t.exploreByCategory}</p>
+
+      <div class="page-stats">
+        <div class="stat">
+          <span class="stat-number">{sortedPosts.length}</span>
+          <span class="stat-label">{t.posts}</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">{categories.length}</span>
+          <span class="stat-label">{t.categoryCount}</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">{uniqueTags.length}</span>
+          <span class="stat-label">{t.tagCount}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filter Section -->
+  <section class="filter-section">
+    <div class="container">
+      <div class="filter-container">
+        <div class="filter-group">
+          <label class="filter-label">{t.categories}</label>
+          <div class="filter-options">
+            <a href="/en/blog" class="filter-option active">{t.allPosts}</a>
+            {categories.map((category) => (
+              <a href={`/en/blog/category/${category}`} class="filter-option">
+                {category}
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label">{t.popularTags}</label>
+          <div class="filter-tags">
+            {uniqueTags.slice(0, 10).map((tag) => (
+              <a href={`/en/blog/tag/${tag}`} class="filter-tag">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="4" y1="9" x2="20" y2="9" />
+                  <line x1="4" y1="15" x2="20" y2="15" />
+                  <line x1="10" y1="3" x2="8" y2="21" />
+                  <line x1="16" y1="3" x2="14" y2="21" />
+                </svg>
+                {tag}
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Posts List -->
+  <section class="posts-section">
+    <div class="container">
+      {
+        paginatedPosts.length > 0 ? (
+          <ul class="posts-grid">
+            {paginatedPosts.map((post, _index) => (
+              <Card
+                title={post.data.title}
+                description={post.data.description}
+                pubDate={post.data.pubDate}
+                updatedDate={post.data.updatedDate}
+                category={post.data.category}
+                tags={post.data.tags}
+                heroImage={post.data.heroImage}
+                href={`/en/blog/${post.id.replace(/^en\//, '')}`}
+                lang={lang}
+                variant="h2"
+              />
+            ))}
+          </ul>
+        ) : (
+          <div class="empty-state">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            <h3>{t.noPosts}</h3>
+            <p>{t.noPostsInCategory}</p>
+          </div>
+        )
+      }
+
+      <Pagination
+        prevUrl={prevUrl}
+        nextUrl={nextUrl}
+        currentPage={page}
+        totalPages={totalPages}
+        lang={lang}
+      />
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* Page Header */
+  .page-header {
+    background: linear-gradient(135deg, var(--color-bg-secondary) 0%, var(--color-bg-tertiary) 100%);
+    padding: 3rem 0 4rem;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    font-size: var(--text-sm);
+  }
+
+  .breadcrumb a {
+    color: var(--color-text-tertiary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .breadcrumb a:hover {
+    color: var(--color-primary);
+  }
+
+  .breadcrumb svg {
+    color: var(--color-text-tertiary);
+  }
+
+  .breadcrumb span {
+    color: var(--color-text-primary);
+    font-weight: 500;
+  }
+
+  .page-title {
+    font-size: var(--text-4xl);
+    font-weight: 800;
+    margin-bottom: 1rem;
+    color: var(--color-text-primary);
+  }
+
+  .page-description {
+    font-size: var(--text-lg);
+    color: var(--color-text-secondary);
+    margin-bottom: 2rem;
+    max-width: 600px;
+  }
+
+  .page-stats {
+    display: flex;
+    gap: 2rem;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .stat-number {
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--color-primary);
+  }
+
+  .stat-label {
+    font-size: var(--text-sm);
+    color: var(--color-text-tertiary);
+  }
+
+  /* Filter Section */
+  .filter-section {
+    padding: 2rem 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .filter-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-label {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-text-primary);
+    min-width: 80px;
+  }
+
+  .filter-options {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-option {
+    padding: 0.5rem 1rem;
+    background-color: var(--color-bg-tertiary);
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+    border-radius: 9999px;
+    text-decoration: none;
+    transition: all var(--transition-fast);
+  }
+
+  .filter-option:hover {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .filter-option.active {
+    background-color: var(--color-primary);
+    color: white;
+  }
+
+  .filter-tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.75rem;
+    background-color: var(--color-bg-tertiary);
+    color: var(--color-text-secondary);
+    font-size: var(--text-xs);
+    border-radius: 9999px;
+    text-decoration: none;
+    transition: all var(--transition-fast);
+  }
+
+  .filter-tag:hover {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .filter-tag svg {
+    opacity: 0.7;
+  }
+
+  /* Posts Grid */
+  .posts-section {
+    padding: 3rem 0 4rem;
+  }
+
+  .posts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  /* Staggered fade-in animation for cards */
+  .posts-grid > :global(li) {
+    opacity: 0;
+    animation: cardFadeIn 0.5s ease-out forwards;
+    animation-delay: calc(var(--index, 0) * 0.1s);
+  }
+
+  .posts-grid > :global(li):nth-child(1) { --index: 1; }
+  .posts-grid > :global(li):nth-child(2) { --index: 2; }
+  .posts-grid > :global(li):nth-child(3) { --index: 3; }
+  .posts-grid > :global(li):nth-child(4) { --index: 4; }
+  .posts-grid > :global(li):nth-child(5) { --index: 5; }
+  .posts-grid > :global(li):nth-child(6) { --index: 6; }
+  .posts-grid > :global(li):nth-child(7) { --index: 7; }
+  .posts-grid > :global(li):nth-child(8) { --index: 8; }
+  .posts-grid > :global(li):nth-child(9) { --index: 9; }
+  .posts-grid > :global(li):nth-child(10) { --index: 10; }
+  .posts-grid > :global(li):nth-child(11) { --index: 11; }
+  .posts-grid > :global(li):nth-child(12) { --index: 12; }
+
+  @keyframes cardFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 4rem 0;
+    color: var(--color-text-tertiary);
+  }
+
+  .empty-state svg {
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+
+  .empty-state h3 {
+    font-size: var(--text-xl);
+    margin-bottom: 0.5rem;
+    color: var(--color-text-secondary);
+  }
+
+  .empty-state p {
+    font-size: var(--text-base);
+    margin: 0;
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .posts-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .page-header {
+      padding: 2rem 0 3rem;
+    }
+
+    .page-title {
+      font-size: var(--text-3xl);
+    }
+
+    .page-stats {
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .filter-group {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .posts-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .posts-section {
+      padding: 2rem 0 3rem;
+    }
+  }
+</style>

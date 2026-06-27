@@ -1,0 +1,7 @@
+/* Inter font - self-hosted for better performance */
+/* This is a placeholder. In production, download the actual font files. */
+
+/* System font stack as fallback */
+:root {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}

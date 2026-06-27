@@ -1,0 +1,164 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { UI } from '../../../i18n/translations';
+
+const lang = Astro.url.pathname.startsWith('/en/') ? 'en' : 'zh';
+const t = UI[lang];
+
+const allPosts = await getCollection('blog', ({ data }) => !data.draft);
+const posts = allPosts.filter((p) => p.data.lang === lang);
+
+// Extract tags with counts
+const tagMap = posts.reduce((acc, post) => {
+  post.data.tags.forEach((tag) => {
+    acc[tag] = (acc[tag] || 0) + 1;
+  });
+  return acc;
+}, {} as Record<string, number>);
+
+const sortedTags = Object.entries(tagMap).sort((a, b) => b[1] - a[1]);
+
+const pageTitle = `${t.tagsTitle} - ${t.siteTitle}`;
+const basePath = lang === 'en' ? '/en' : '';
+---
+
+<BaseLayout title={pageTitle} description={t.tagsDesc} lang={lang}>
+  <section class="tags-page">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href={`${basePath}/`}>{t.breadcrumbHome}</a>
+      <span class="separator" aria-hidden="true">/</span>
+      <span class="current" aria-current="page">{t.tags}</span>
+    </nav>
+
+    <h1>{t.tagsTitle}</h1>
+    <p class="subtitle">{t.tagsDesc}</p>
+
+    {
+      sortedTags.length > 0 ? (
+        <div class="tags-cloud">
+          {sortedTags.map(([tag, count]) => (
+            <a href={`${basePath}/blog/tag/${tag}`} class="tag-item">
+              <span class="tag-name">#{tag}</span>
+              <span class="tag-count">{count}</span>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="empty">{t.noPosts}</p>
+      )
+    }
+  </section>
+</BaseLayout>
+
+<style>
+  .tags-page {
+    max-width: 50rem;
+    margin: 0 auto;
+  }
+
+  /* Breadcrumb */
+  .breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+  }
+
+  .breadcrumb a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .breadcrumb a:hover {
+    text-decoration: underline;
+  }
+
+  .breadcrumb .separator {
+    color: var(--color-text-tertiary);
+  }
+
+  .breadcrumb .current {
+    color: var(--color-text-primary);
+  }
+
+  /* Heading */
+  .tags-page h1 {
+    font-size: 2.5rem;
+    color: var(--color-text-primary);
+    margin-bottom: 0.5rem;
+    text-align: center;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: var(--color-text-secondary);
+    margin-bottom: 3rem;
+    font-size: 1.1rem;
+  }
+
+  /* Tags cloud */
+  .tags-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
+
+  .tag-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background-color: var(--color-primary-light);
+    border-radius: 25px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+  }
+
+  .tag-item:hover {
+    background-color: var(--color-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--color-shadow);
+    text-decoration: none;
+  }
+
+  .tag-item:hover .tag-name,
+  .tag-item:hover .tag-count {
+    color: var(--color-bg-primary);
+  }
+
+  .tag-item:hover .tag-count {
+    background-color: var(--color-primary-light);
+  }
+
+  .tag-name {
+    font-size: 1rem;
+    color: var(--color-primary);
+    font-weight: 500;
+    transition: color 0.2s ease;
+  }
+
+  .tag-count {
+    background-color: var(--color-primary);
+    color: var(--color-bg-primary);
+    padding: 0.15rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    min-width: 1.5rem;
+    text-align: center;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    color: var(--color-text-secondary);
+    padding: 3rem;
+    font-size: 1.1rem;
+  }
+</style>
