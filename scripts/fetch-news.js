@@ -204,7 +204,7 @@ pubDate: ${dateStr}
 category: "科技前沿"
 tags: ["科技", "前沿", "AI", "芯片", "创新"]
 lang: "zh"
-heroImage: "${newsItems[0]?.image || 'https://via.placeholder.com/1200x630?text=Tech+News'}"
+${newsItems[0]?.image ? `heroImage: "${newsItems[0].image}"` : ''}
 ---
 
 ## 🚀 ${dateChinese} 前沿科技速递
@@ -243,7 +243,7 @@ pubDate: ${dateStr}
 category: "Tech Frontier"
 tags: ["tech", "frontier", "AI", "chips", "innovation"]
 lang: "en"
-heroImage: "${newsItems[0]?.image || 'https://via.placeholder.com/1200x630?text=Tech+News'}"
+${newsItems[0]?.image ? `heroImage: "${newsItems[0].image}"` : ''}
 ---
 
 ## 🚀 ${dateEnglish} Tech Frontier Digest
