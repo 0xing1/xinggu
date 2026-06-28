@@ -139,6 +139,31 @@ const TECH_SOURCES = [
     name: 'The Verge',
     url: 'https://www.theverge.com/rss/index.xml',
     category: '国际科技'
+  },
+  {
+    name: 'Solidot',
+    url: 'https://www.solidot.org/index.rss',
+    category: '国内科技'
+  },
+  {
+    name: 'Ars Technica',
+    url: 'http://feeds.arstechnica.com/arstechnica/index/',
+    category: '国际科技'
+  },
+  {
+    name: 'Wired',
+    url: 'https://www.wired.com/feed/rss',
+    category: '国际科技'
+  },
+  {
+    name: '少数派',
+    url: 'https://sspai.com/feed',
+    category: '国内科技'
+  },
+  {
+    name: 'MIT Tech Review',
+    url: 'https://www.technologyreview.com/feed/',
+    category: '国际科技'
   }
 ];
 
@@ -224,7 +249,7 @@ ${news.description}
 ---
 `).join('\n')}
 
-*数据来源：36氪、Hacker News、TechCrunch、The Verge*
+*数据来源：36氪、Solidot、少数派、Hacker News、TechCrunch、The Verge、Ars Technica、Wired、MIT Tech Review*
 `;
 
   return content;
@@ -263,7 +288,7 @@ ${news.description}
 ---
 `).join('\n')}
 
-*Sources: 36Kr, Hacker News, TechCrunch, The Verge*
+*Sources: 36Kr, Solidot, sspai, Hacker News, TechCrunch, The Verge, Ars Technica, Wired, MIT Tech Review*
 `;
 }
 

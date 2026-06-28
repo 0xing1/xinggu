@@ -2,9 +2,11 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 import { UI } from '../../i18n/translations';
+import { DEFAULT_PASSWORD_HASH, TOKEN_SECRET } from '../../lib/auth';
 
-// Auth is client-side only (static site compatible)
-// Set AUTH_PASSWORD env var and check cookie client-side
+// Auth is client-side with PBKDF2 + HMAC (static site compatible)
+// Password hash is embedded — PBKDF2 is one-way, cannot be reversed
+// Token is HMAC-signed, prevents cookie forgery
 
 // 获取所有文章
 const allPosts = await getCollection('blog');
@@ -65,6 +67,7 @@ const recentPosts = sortedPosts.slice(0, 10);
       </nav>
       <div class="sidebar-footer">
         <a href="/" class="back-link">← 返回博客</a>
+        <button id="logout-btn" class="logout-link">🚪 登出</button>
       </div>
     </aside>
 
@@ -341,15 +344,18 @@ const recentPosts = sortedPosts.slice(0, 10);
       margin-top: 2rem;
       padding-top: 1rem;
       border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex; flex-direction: column; gap: 0.5rem;
     }
 
-    .back-link {
+    .back-link, .logout-link {
       color: var(--color-text-tertiary);
       text-decoration: none;
       font-size: 0.875rem;
+      background: none; border: none; cursor: pointer;
+      text-align: left; padding: 0;
     }
 
-    .back-link:hover {
+    .back-link:hover, .logout-link:hover {
       color: white;
     }
 
@@ -946,31 +952,213 @@ ${content}
       `);
     });
   </script>
-  <!-- Auth: check cookie on load, handle login -->
-  <script>
-    (function() {
-      var loginPage = document.getElementById("login-page");
-      var adminContent = document.getElementById("admin-content");
-      var errorEl = document.getElementById("login-error");
+	<!-- Auth: PBKDF2 password verify + HMAC token -->
+	<script type="module">
+		// === Injected from server-side config ===
+		const PASSWORD_HASH = "{DEFAULT_PASSWORD_HASH}";
+		const TOKEN_SECRET = "{TOKEN_SECRET}";
+		const MAX_ATTEMPTS = 5;
+		const LOCKOUT_SECONDS = 30;
+		const TOKEN_MAX_AGE = 24 * 60 * 60 * 1000; // 1 day
+		const COOKIE_NAME = "admin_token";
 
-      var cookies = document.cookie.split(";");
-      var authed = cookies.some(function(c) {
-        return c.trim().startsWith("admin_auth=");
-      });
+		// === Rate limiting (session only) ===
+		let failCount = 0;
+		let lockoutUntil = 0;
 
-      if (authed && adminContent) {
-        if (loginPage) loginPage.style.display = "none";
-        adminContent.style.display = "flex";
-      }
+		function isLocked() {
+			if (lockoutUntil > Date.now()) return true;
+			if (failCount >= MAX_ATTEMPTS) {
+				lockoutUntil = Date.now() + LOCKOUT_SECONDS * 1000;
+				return true;
+			}
+			return false;
+		}
 
-      document.getElementById("login-form")?.addEventListener("submit", function(e) {
-        e.preventDefault();
-        var pw = document.getElementById("password").value;
-        if (pw) {
-          document.cookie = "admin_auth=" + pw + ";path=/;max-age=86400;SameSite=Strict";
-          location.reload();
-        }
-      });
-    })();
-  </script>
+		function getLockoutRemaining() {
+			return Math.ceil((lockoutUntil - Date.now()) / 1000);
+		}
+
+		// === PBKDF2 password verification (Web Crypto API) ===
+		async function verifyPassword(password, storedHash) {
+			try {
+				const parts = storedHash.split(':');
+				if (parts.length !== 2) return false;
+				const [saltHex, expectedHex] = parts;
+				if (!saltHex || !expectedHex) return false;
+
+				const enc = new TextEncoder();
+				const salt = enc.encode(saltHex);
+
+				const keyMaterial = await crypto.subtle.importKey(
+					'raw', enc.encode(password),
+					'PBKDF2', false, ['deriveBits']
+				);
+
+				const derivedBits = await crypto.subtle.deriveBits(
+					{ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+					keyMaterial, 512
+				);
+
+				const hashHex = Array.from(new Uint8Array(derivedBits))
+					.map(b => b.toString(16).padStart(2, '0')).join('');
+
+				return hashHex === expectedHex;
+			} catch (e) {
+				console.error('Password verification error:', e);
+				return false;
+			}
+		}
+
+		// === HMAC token creation (Web Crypto API) ===
+		async function createToken() {
+			const payload = Date.now() + ':' + crypto.randomUUID();
+			const enc = new TextEncoder();
+			const key = await crypto.subtle.importKey(
+				'raw', enc.encode(TOKEN_SECRET),
+				{ name: 'HMAC', hash: 'SHA-256' },
+				false, ['sign']
+			);
+			const signature = await crypto.subtle.sign('HMAC', key, enc.encode(payload));
+			const sigHex = Array.from(new Uint8Array(signature))
+				.map(b => b.toString(16).padStart(2, '0')).join('');
+			return payload + ':' + sigHex;
+		}
+
+		// === HMAC token validation ===
+		async function validateToken(token) {
+			try {
+				if (!token) return false;
+
+				// Find last ':' — everything after is the signature
+				const lastColon = token.lastIndexOf(':');
+				if (lastColon < 0) return false;
+
+				const payload = token.substring(0, lastColon);
+				const sigHex = token.substring(lastColon + 1);
+				if (!payload || !sigHex || sigHex.length !== 64) return false;
+
+				// Verify HMAC
+				const enc = new TextEncoder();
+				const key = await crypto.subtle.importKey(
+					'raw', enc.encode(TOKEN_SECRET),
+					{ name: 'HMAC', hash: 'SHA-256' },
+					false, ['verify']
+				);
+				const sigBytes = new Uint8Array(
+					sigHex.match(/.{2}/g).map(b => parseInt(b, 16))
+				);
+				const valid = await crypto.subtle.verify(
+					'HMAC', key, sigBytes, enc.encode(payload)
+				);
+				if (!valid) return false;
+
+				// Check expiry
+				const timestamp = parseInt(payload.split(':')[0], 10);
+				if (isNaN(timestamp)) return false;
+				if (Date.now() - timestamp > TOKEN_MAX_AGE) return false;
+
+				return true;
+			} catch (e) {
+				console.error('Token validation error:', e);
+				return false;
+			}
+		}
+
+		// === Cookie helpers ===
+		function getCookie(name) {
+			const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+			return match ? decodeURIComponent(match[1]) : null;
+		}
+
+		function setCookie(name, value, maxAge) {
+			document.cookie = name + '=' + encodeURIComponent(value) +
+				';path=/;max-age=' + maxAge + ';SameSite=Strict';
+		}
+
+		function deleteCookie(name) {
+			document.cookie = name + '=;path=/;max-age=0;SameSite=Strict';
+		}
+
+		// === Show admin / show login ===
+		function showAdmin() {
+			const loginPage = document.getElementById('login-page');
+			const adminContent = document.getElementById('admin-content');
+			if (loginPage) loginPage.style.display = 'none';
+			if (adminContent) adminContent.style.display = 'flex';
+		}
+
+		function showLogin() {
+			const loginPage = document.getElementById('login-page');
+			const adminContent = document.getElementById('admin-content');
+			if (loginPage) loginPage.style.display = 'flex';
+			if (adminContent) adminContent.style.display = 'none';
+		}
+
+		// === Init: check existing token ===
+		(async function init() {
+			const token = getCookie(COOKIE_NAME);
+			if (token && await validateToken(token)) {
+				showAdmin();
+			}
+		})();
+
+		// === Login form handler ===
+		document.getElementById('login-form')?.addEventListener('submit', async function(e) {
+			e.preventDefault();
+
+			const errorEl = document.getElementById('login-error');
+			if (errorEl) errorEl.classList.add('hidden');
+
+			// Rate limit check
+			if (isLocked()) {
+				const remaining = getLockoutRemaining();
+				if (errorEl) {
+					errorEl.textContent = '尝试次数过多，请 ' + remaining + ' 秒后再试';
+					errorEl.classList.remove('hidden');
+				}
+				return;
+			}
+
+			const password = document.getElementById('password').value;
+			if (!password) return;
+
+			const submitBtn = this.querySelector('button[type="submit"]');
+			const originalText = submitBtn.textContent;
+			submitBtn.textContent = '验证中…';
+			submitBtn.disabled = true;
+
+			const ok = await verifyPassword(password, PASSWORD_HASH);
+
+			if (ok) {
+				const token = await createToken();
+				setCookie(COOKIE_NAME, token, 86400);
+				showAdmin();
+				if (errorEl) errorEl.classList.add('hidden');
+				// Clear password field
+				document.getElementById('password').value = '';
+			} else {
+				failCount++;
+				if (errorEl) {
+					const remaining = MAX_ATTEMPTS - failCount;
+					if (remaining > 0) {
+						errorEl.textContent = '密码错误，还剩 ' + remaining + ' 次尝试';
+					} else {
+						errorEl.textContent = '尝试次数过多，请 ' + LOCKOUT_SECONDS + ' 秒后再试';
+					}
+					errorEl.classList.remove('hidden');
+				}
+				document.getElementById('password').value = '';
+			}
+
+			submitBtn.textContent = originalText;
+			submitBtn.disabled = false;
+		});
+
+		// === Logout ===
+		document.getElementById('logout-btn')?.addEventListener('click', function() {
+			deleteCookie(COOKIE_NAME);
+			showLogin();
+		});
+	</script>
 </BaseLayout>
