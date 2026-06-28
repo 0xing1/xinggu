@@ -952,11 +952,14 @@ ${content}
       `);
     });
   </script>
+	<!-- Auth config injected by Astro -->
+	<script define:vars={{ passwordHash: DEFAULT_PASSWORD_HASH, tokenSecret: TOKEN_SECRET }}>
+		// PBKDF2 hash is one-way — cannot be reversed
+		window.__ADMIN__ = { PASSWORD_HASH: passwordHash, TOKEN_SECRET: tokenSecret };
+	</script>
 	<!-- Auth: PBKDF2 password verify + HMAC token -->
 	<script type="module">
-		// === Injected from server-side config ===
-		const PASSWORD_HASH = "{DEFAULT_PASSWORD_HASH}";
-		const TOKEN_SECRET = "{TOKEN_SECRET}";
+		const { PASSWORD_HASH, TOKEN_SECRET } = window.__ADMIN__;
 		const MAX_ATTEMPTS = 5;
 		const LOCKOUT_SECONDS = 30;
 		const TOKEN_MAX_AGE = 24 * 60 * 60 * 1000; // 1 day
