@@ -42,7 +42,10 @@ jobs:
           git push
 
       - name: Build site
+        if: steps.changes.outputs.has_changes != '0'
         run: npm run build
+        env:
+          NODE_ENV: production
 
       - name: Deploy to Cloudflare Pages
         if: steps.changes.outputs.has_changes != '0'
