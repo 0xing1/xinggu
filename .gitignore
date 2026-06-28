@@ -25,6 +25,7 @@ Thumbs.db
 
 # Reference / temp
 .reference/
+tmp-logs*.zip
 audit-output/
 1.cpp
 blog.sh
