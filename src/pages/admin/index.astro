@@ -1,12 +1,10 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
-import { UI } from '../../i18n/translations';
-import { DEFAULT_PASSWORD_HASH, TOKEN_SECRET } from '../../lib/auth';
+import { DEFAULT_PASSWORD_HASH } from '../../lib/auth';
 
-// Auth is client-side with PBKDF2 + HMAC (static site compatible)
-// Password hash is embedded — PBKDF2 is one-way, cannot be reversed
-// Token is HMAC-signed, prevents cookie forgery
+// 密码哈希嵌入 — PBKDF2 不可逆，仅用于 UI 展示控制
+// API 端点通过环境变量 ADMIN_API_KEY 独立认证
 
 // 获取所有文章
 const allPosts = await getCollection('blog');
@@ -39,7 +37,7 @@ const recentPosts = sortedPosts.slice(0, 10);
   </div>
 
   <!-- Admin content (hidden until login) -->
-  <div id="admin-content" class="admin-container" style="display:none">
+  <div id="admin-content" class="admin-container hidden">
     <!-- 侧边栏 -->
     <aside class="admin-sidebar">
       <div class="sidebar-header">
@@ -67,7 +65,7 @@ const recentPosts = sortedPosts.slice(0, 10);
       </nav>
       <div class="sidebar-footer">
         <a href="/" class="back-link">← 返回博客</a>
-        <button id="logout-btn" class="logout-link">🚪 登出</button>
+        <button id="logout-btn" class="logout-link" aria-label="登出">🚪 登出</button>
       </div>
     </aside>
 
@@ -128,8 +126,8 @@ const recentPosts = sortedPosts.slice(0, 10);
                     <td><span class="badge">{post.data.category || '未分类'}</span></td>
                     <td>{post.data.pubDate.toLocaleDateString('zh-CN')}</td>
                     <td>
-                      <button class="btn-edit" data-slug={post.id.replace(/^zh\//, '')}>编辑</button>
-                      <button class="btn-delete" data-slug={post.id.replace(/^zh\//, '')}>删除</button>
+                      <button class="btn-edit" data-slug={post.id.replace(/^zh\//, '')} aria-label={`编辑 ${post.data.title}`}>编辑</button>
+                      <button class="btn-delete" data-slug={post.id.replace(/^zh\//, '')} aria-label={`删除 ${post.data.title}`}>删除</button>
                     </td>
                   </tr>
                 ))}
@@ -141,18 +139,18 @@ const recentPosts = sortedPosts.slice(0, 10);
 
       <!-- 文章管理 -->
       <section id="posts" class="tab-content">
-        <h1>文章管理</h1>
+        <h2>文章管理</h2>
         <div class="posts-filter">
-          <select id="lang-filter">
+          <select id="lang-filter" aria-label="语言筛选">
             <option value="all">所有语言</option>
             <option value="zh">中文</option>
             <option value="en">英文</option>
           </select>
-          <select id="category-filter">
+          <select id="category-filter" aria-label="分类筛选">
             <option value="all">所有分类</option>
             {categories.map(cat => <option value={cat}>{cat}</option>)}
           </select>
-          <input type="text" id="search-input" placeholder="搜索文章..." />
+          <input type="text" id="search-input" placeholder="搜索文章..." aria-label="搜索文章" />
         </div>
         <div class="posts-list">
           {sortedPosts.map(post => (
@@ -167,8 +165,8 @@ const recentPosts = sortedPosts.slice(0, 10);
                 </div>
               </div>
               <div class="post-actions">
-                <button class="btn-edit" data-slug={post.id.replace(/^zh\//, '')}>编辑</button>
-                <button class="btn-delete" data-slug={post.id.replace(/^zh\//, '')}>删除</button>
+                <button class="btn-edit" data-slug={post.id.replace(/^zh\//, '')} aria-label={`编辑 ${post.data.title}`}>编辑</button>
+                <button class="btn-delete" data-slug={post.id.replace(/^zh\//, '')} aria-label={`删除 ${post.data.title}`}>删除</button>
               </div>
             </div>
           ))}
@@ -177,7 +175,7 @@ const recentPosts = sortedPosts.slice(0, 10);
 
       <!-- 新建文章 -->
       <section id="new-post" class="tab-content">
-        <h1>新建文章</h1>
+        <h2>新建文章</h2>
         <form id="new-post-form" class="post-form">
           <div class="form-group">
             <label for="post-title">标题</label>
@@ -220,7 +218,7 @@ const recentPosts = sortedPosts.slice(0, 10);
 
       <!-- 新闻管理 -->
       <section id="news" class="tab-content">
-        <h1>新闻管理</h1>
+        <h2>新闻管理</h2>
         <div class="news-actions">
           <button id="fetch-news-btn" class="btn-primary">🔄 获取今日科技新闻</button>
           <p class="news-info">点击按钮获取最新的 3-5 条前沿科技新闻</p>
@@ -239,7 +237,7 @@ const recentPosts = sortedPosts.slice(0, 10);
 
       <!-- 分类管理 -->
       <section id="categories" class="tab-content">
-        <h1>分类管理</h1>
+        <h2>分类管理</h2>
         <div class="categories-list">
           {categories.map(cat => {
             const count = zhPosts.filter(p => p.data.category === cat).length;
@@ -250,7 +248,7 @@ const recentPosts = sortedPosts.slice(0, 10);
                   <span>{count} 篇文章</span>
                 </div>
                 <div class="category-actions">
-                  <button class="btn-edit">编辑</button>
+                  <button class="btn-edit" aria-label={`编辑分类 ${cat}`}>编辑</button>
                 </div>
               </div>
             );
@@ -260,20 +258,20 @@ const recentPosts = sortedPosts.slice(0, 10);
 
       <!-- 设置 -->
       <section id="settings" class="tab-content">
-        <h1>设置</h1>
+        <h2>设置</h2>
         <div class="settings-section">
           <h3>站点信息</h3>
           <div class="form-group">
-            <label>站点名称</label>
-            <input type="text" value="星谷的技术博客" />
+            <label for="site-name">站点名称</label>
+            <input type="text" id="site-name" value="星谷的技术博客" />
           </div>
           <div class="form-group">
-            <label>站点描述</label>
-            <textarea>分享前端开发、编程技巧和技术见解</textarea>
+            <label for="site-desc">站点描述</label>
+            <textarea id="site-desc">分享前端开发、编程技巧和技术见解</textarea>
           </div>
           <div class="form-group">
-            <label>站点 URL</label>
-            <input type="text" value="https://xinggu.com" />
+            <label for="site-url">站点 URL</label>
+            <input type="text" id="site-url" value="https://xinggu.com" />
           </div>
         </div>
         <div class="settings-section">
@@ -284,8 +282,8 @@ const recentPosts = sortedPosts.slice(0, 10);
             </label>
           </div>
           <div class="form-group">
-            <label>更新时间</label>
-            <input type="time" value="08:00" />
+            <label for="update-time">更新时间</label>
+            <input type="time" id="update-time" value="08:00" />
           </div>
         </div>
         <button class="btn-primary">保存设置</button>
@@ -294,13 +292,17 @@ const recentPosts = sortedPosts.slice(0, 10);
   </div>
 
   <!-- 消息提示 -->
-  <div id="toast" class="toast"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <style>
     .admin-container {
       display: flex;
       min-height: calc(100vh - 200px);
       margin: 0 -2rem;
+    }
+
+    .admin-container.hidden {
+      display: none;
     }
 
     .admin-sidebar {
@@ -953,17 +955,16 @@ ${content}
     });
   </script>
 	<!-- Auth config injected by Astro -->
-	<script define:vars={{ passwordHash: DEFAULT_PASSWORD_HASH, tokenSecret: TOKEN_SECRET }}>
+	<script define:vars={{ passwordHash: DEFAULT_PASSWORD_HASH }}>
 		// PBKDF2 hash is one-way — cannot be reversed
-		window.__ADMIN__ = { PASSWORD_HASH: passwordHash, TOKEN_SECRET: tokenSecret };
+		window.__ADMIN__ = { PASSWORD_HASH: passwordHash };
 	</script>
-	<!-- Auth: PBKDF2 password verify + HMAC token -->
+	<!-- Auth: PBKDF2 password verify + sessionStorage -->
 	<script type="module">
-		const { PASSWORD_HASH, TOKEN_SECRET } = window.__ADMIN__;
+		const { PASSWORD_HASH } = window.__ADMIN__;
 		const MAX_ATTEMPTS = 5;
 		const LOCKOUT_SECONDS = 30;
-		const TOKEN_MAX_AGE = 24 * 60 * 60 * 1000; // 1 day
-		const COOKIE_NAME = "admin_token";
+		const SESSION_KEY = "admin_authed";
 
 		// === Rate limiting (session only) ===
 		let failCount = 0;
@@ -1008,79 +1009,9 @@ ${content}
 
 				return hashHex === expectedHex;
 			} catch (e) {
-				console.error('Password verification error:', e);
+				console.debug('Password verification error:', e);
 				return false;
 			}
-		}
-
-		// === HMAC token creation (Web Crypto API) ===
-		async function createToken() {
-			const payload = Date.now() + ':' + crypto.randomUUID();
-			const enc = new TextEncoder();
-			const key = await crypto.subtle.importKey(
-				'raw', enc.encode(TOKEN_SECRET),
-				{ name: 'HMAC', hash: 'SHA-256' },
-				false, ['sign']
-			);
-			const signature = await crypto.subtle.sign('HMAC', key, enc.encode(payload));
-			const sigHex = Array.from(new Uint8Array(signature))
-				.map(b => b.toString(16).padStart(2, '0')).join('');
-			return payload + ':' + sigHex;
-		}
-
-		// === HMAC token validation ===
-		async function validateToken(token) {
-			try {
-				if (!token) return false;
-
-				// Find last ':' — everything after is the signature
-				const lastColon = token.lastIndexOf(':');
-				if (lastColon < 0) return false;
-
-				const payload = token.substring(0, lastColon);
-				const sigHex = token.substring(lastColon + 1);
-				if (!payload || !sigHex || sigHex.length !== 64) return false;
-
-				// Verify HMAC
-				const enc = new TextEncoder();
-				const key = await crypto.subtle.importKey(
-					'raw', enc.encode(TOKEN_SECRET),
-					{ name: 'HMAC', hash: 'SHA-256' },
-					false, ['verify']
-				);
-				const sigBytes = new Uint8Array(
-					sigHex.match(/.{2}/g).map(b => parseInt(b, 16))
-				);
-				const valid = await crypto.subtle.verify(
-					'HMAC', key, sigBytes, enc.encode(payload)
-				);
-				if (!valid) return false;
-
-				// Check expiry
-				const timestamp = parseInt(payload.split(':')[0], 10);
-				if (isNaN(timestamp)) return false;
-				if (Date.now() - timestamp > TOKEN_MAX_AGE) return false;
-
-				return true;
-			} catch (e) {
-				console.error('Token validation error:', e);
-				return false;
-			}
-		}
-
-		// === Cookie helpers ===
-		function getCookie(name) {
-			const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
-			return match ? decodeURIComponent(match[1]) : null;
-		}
-
-		function setCookie(name, value, maxAge) {
-			document.cookie = name + '=' + encodeURIComponent(value) +
-				';path=/;max-age=' + maxAge + ';SameSite=Strict';
-		}
-
-		function deleteCookie(name) {
-			document.cookie = name + '=;path=/;max-age=0;SameSite=Strict';
 		}
 
 		// === Show admin / show login ===
@@ -1088,20 +1019,20 @@ ${content}
 			const loginPage = document.getElementById('login-page');
 			const adminContent = document.getElementById('admin-content');
 			if (loginPage) loginPage.style.display = 'none';
-			if (adminContent) adminContent.style.display = 'flex';
+			if (adminContent) adminContent.classList.remove('hidden');
 		}
 
 		function showLogin() {
 			const loginPage = document.getElementById('login-page');
 			const adminContent = document.getElementById('admin-content');
 			if (loginPage) loginPage.style.display = 'flex';
-			if (adminContent) adminContent.style.display = 'none';
+			if (adminContent) adminContent.classList.add('hidden');
+			sessionStorage.removeItem(SESSION_KEY);
 		}
 
-		// === Init: check existing token ===
-		(async function init() {
-			const token = getCookie(COOKIE_NAME);
-			if (token && await validateToken(token)) {
+		// === Init: check existing session ===
+		(function init() {
+			if (sessionStorage.getItem(SESSION_KEY) === 'true') {
 				showAdmin();
 			}
 		})();
@@ -1134,11 +1065,9 @@ ${content}
 			const ok = await verifyPassword(password, PASSWORD_HASH);
 
 			if (ok) {
-				const token = await createToken();
-				setCookie(COOKIE_NAME, token, 86400);
+				sessionStorage.setItem(SESSION_KEY, 'true');
 				showAdmin();
 				if (errorEl) errorEl.classList.add('hidden');
-				// Clear password field
 				document.getElementById('password').value = '';
 			} else {
 				failCount++;
@@ -1160,7 +1089,6 @@ ${content}
 
 		// === Logout ===
 		document.getElementById('logout-btn')?.addEventListener('click', function() {
-			deleteCookie(COOKIE_NAME);
 			showLogin();
 		});
 	</script>

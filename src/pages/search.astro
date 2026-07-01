@@ -129,6 +129,20 @@ const homePath = lang === 'en' ? '/en/' : '/';
     padding: 0 2px !important;
     border-radius: 2px !important;
   }
+
+  .search-notice {
+    text-align: center;
+    padding: 2rem;
+    color: var(--color-text-secondary);
+  }
+
+  .search-notice code {
+    display: block;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background: var(--color-bg-tertiary);
+    border-radius: 0.5rem;
+  }
 </style>
 
 <script>
@@ -148,9 +162,9 @@ const homePath = lang === 'en' ? '/en/' : '/';
 
         if (import.meta.env.DEV) {
           searchElement.innerHTML = `
-            <div style="text-align: center; padding: 2rem; color: var(--color-text-secondary);">
+            <div class="search-notice">
               <p><strong>${document.documentElement.lang === 'en' ? 'Dev mode:' : '开发模式提示：'}${document.documentElement.lang === 'en' ? ' Search requires a build first.' : '搜索功能需要先构建项目。'}</strong></p>
-              <code style="display: block; margin-top: 1rem; padding: 0.75rem; background: var(--color-bg-tertiary); border-radius: 0.5rem;">npm run build</code>
+              <code>npm run build</code>
             </div>
           `;
           return;
@@ -188,9 +202,9 @@ const homePath = lang === 'en' ? '/en/' : '/';
       } catch (e) {
         console.error("Pagefind failed to load:", e);
         searchElement.innerHTML = `
-          <div style="text-align: center; padding: 2rem; color: var(--color-text-secondary);">
+          <div class="search-notice">
             <p>${document.documentElement.lang === 'en' ? 'Search requires a build first.' : '搜索功能需要先构建项目。'}</p>
-            <code style="display: block; margin-top: 1rem; padding: 0.75rem; background: var(--color-bg-tertiary); border-radius: 0.5rem;">npm run build</code>
+            <code>npm run build</code>
           </div>
         `;
       }

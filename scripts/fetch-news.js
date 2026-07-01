@@ -147,7 +147,7 @@ const TECH_SOURCES = [
   },
   {
     name: 'Ars Technica',
-    url: 'http://feeds.arstechnica.com/arstechnica/index/',
+    url: 'https://feeds.arstechnica.com/arstechnica/index/',
     category: '国际科技'
   },
   {

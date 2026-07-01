@@ -5,8 +5,36 @@ import fs from 'fs';
 
 const execAsync = promisify(exec);
 
-export async function GET({ request }) {
+/**
+ * 获取科技新闻 API
+ * 需要 ADMIN_API_KEY 环境变量进行认证
+ * 请求头: Authorization: Bearer <ADMIN_API_KEY>
+ */
+export async function GET({ request, locals }) {
   try {
+    // 认证检查
+    const apiKey = locals.runtime?.env?.ADMIN_API_KEY || process.env.ADMIN_API_KEY;
+    if (!apiKey) {
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'API 未配置：缺少 ADMIN_API_KEY 环境变量'
+      }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || authHeader !== `Bearer ${apiKey}`) {
+      return new Response(JSON.stringify({
+        success: false,
+        message: '认证失败：无效的 API Key'
+      }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     const rootDir = process.cwd();
     const scriptPath = path.join(rootDir, 'scripts', 'fetch-news.js');
 

@@ -23,17 +23,13 @@ Thumbs.db
 # Astro
 .astro/
 
+# Cloudflare
+.wrangler/
+
 # Reference / temp
 .reference/
 tmp-logs*.zip
 audit-output/
-1.cpp
-blog.sh
-test-blog-skill.sh
-BLOG_SKILL_SUMMARY.md
-BLOG_SKILL_USAGE.md
-UI_OPTIMIZATION_SUMMARY.md
-NEWS-FEATURE.md
 
 # Logs
 *.log

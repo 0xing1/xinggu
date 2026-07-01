@@ -52,11 +52,11 @@ const breadcrumbs = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <meta name="author" content={SITE.author} />
-    <meta name="theme-color" content="" />
+    <meta name="theme-color" content="#ffffff" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.svg" />
 
     <!-- Canonical URL -->
     <link rel="canonical" href={canonicalURL} />
@@ -192,47 +192,6 @@ const breadcrumbs = [
 
       main {
         flex: 1;
-      }
-
-      /* Back to top button */
-      .back-to-top {
-        position: fixed;
-        bottom: 2rem;
-        right: 2rem;
-        width: 48px;
-        height: 48px;
-        background-color: var(--color-primary);
-        color: white;
-        border: none;
-        border-radius: 9999px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        opacity: 0;
-        visibility: hidden;
-        transition: all var(--transition-base);
-        box-shadow: var(--shadow-lg);
-        z-index: 1030;
-      }
-
-      .back-to-top.visible {
-        opacity: 1;
-        visibility: visible;
-      }
-
-      .back-to-top:hover {
-        background-color: var(--color-primary-hover);
-        transform: translateY(-2px);
-      }
-
-      @media (max-width: 768px) {
-        .back-to-top {
-          bottom: 1rem;
-          right: 1rem;
-          width: 40px;
-          height: 40px;
-        }
       }
     </style>
   </body>
