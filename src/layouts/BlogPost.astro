@@ -58,16 +58,9 @@ const text = {
     relatedDescription: '探索更多相关内容',
     copyCode: '复制',
     copied: '已复制!',
-    like: '点赞',
-    bookmark: '收藏',
-    bookmarked: '已收藏',
-    comments: '评论',
     author: '关于作者',
     authorBio: '全栈开发者，热爱技术，分享前端开发、编程技巧和技术见解。',
     viewProfile: '查看主页',
-    shareWechat: '微信',
-    shareWeibo: '微博',
-    scanToShare: '扫码分享到微信',
   },
   en: {
     published: 'Published on',
@@ -85,20 +78,16 @@ const text = {
     relatedDescription: 'Explore more related content',
     copyCode: 'Copy',
     copied: 'Copied!',
-    like: 'Like',
-    bookmark: 'Bookmark',
-    bookmarked: 'Saved',
-    comments: 'Comments',
     author: 'About the Author',
     authorBio: 'Full-stack developer passionate about technology, sharing web dev insights and tips.',
     viewProfile: 'View Profile',
-    shareWechat: 'WeChat',
-    shareWeibo: 'Weibo',
-    scanToShare: 'Scan to share on WeChat',
   },
 };
 
 const t = text[lang];
+
+// 移除未使用的社交功能变量
+// const postSlug = ... (已删除)
 
 // 格式化日期
 const formatDate = (date: Date) => {
@@ -113,9 +102,6 @@ const formatDate = (date: Date) => {
 // 注意：在 SSG 中无法直接获取渲染后的正文长度，使用描述作为基准
 const estimatedWordCount = Math.max(300, description.length * 8);
 const readingTime = Math.max(1, Math.ceil(estimatedWordCount / (lang === 'zh' ? 400 : 200)));
-
-// 文章唯一 ID（用于 localStorage key）
-const postSlug = Astro.url.pathname.replace(/\/$/, '').split('/').pop() || 'unknown';
 
 // JSON-LD 结构化数据
 const jsonLd = {
@@ -186,50 +172,6 @@ const faqSchema = faq.length > 0 ? {
 
   <!-- Reading Progress Bar -->
   <div class="reading-progress" id="reading-progress"></div>
-
-  <!-- Floating Action Bar (desktop sidebar) -->
-  <aside class="floating-actions" id="floating-actions" aria-label={t.share}>
-    <button class="float-btn like-btn" id="float-like-btn" aria-label={t.like} data-post={postSlug}>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-      </svg>
-      <span class="float-count" id="float-like-count">0</span>
-    </button>
-    <button class="float-btn bookmark-btn" id="float-bookmark-btn" aria-label={t.bookmark} data-post={postSlug}>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-      </svg>
-    </button>
-    <div class="float-divider"></div>
-    <a class="float-btn" href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(Astro.url.href)}`} target="_blank" rel="noopener noreferrer" aria-label="Twitter">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-    </a>
-    <a class="float-btn" href={`https://service.weibo.com/share/share.php?url=${encodeURIComponent(Astro.url.href)}&title=${encodeURIComponent(title)}`} target="_blank" rel="noopener noreferrer" aria-label={t.shareWeibo}>
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M10.098 20.323c-3.977.391-7.414-1.406-7.672-4.02-.259-2.609 2.759-5.047 6.74-5.441 3.979-.394 7.413 1.404 7.671 4.018.259 2.6-2.759 5.049-6.739 5.443zM9.05 17.219c-.384.616-1.208.884-1.829.602-.612-.279-.793-.991-.406-1.593.379-.595 1.176-.86 1.796-.584.625.28.825.978.439 1.575zm1.27-1.627c-.141.237-.449.353-.689.253-.236-.09-.307-.361-.158-.596.148-.234.456-.351.692-.243.239.09.315.36.155.586zm.176-2.719c-1.893-.494-4.036.45-4.857 2.118-.836 1.704-.026 3.591 1.886 4.21 1.983.642 4.318-.341 5.132-2.179.8-1.793-.201-3.642-2.161-4.149zm7.563-1.224c-.346-.105-.583-.176-.402-.636.396-1.005.436-1.872.009-2.496-.803-1.172-3.007-1.112-5.578-.033 0 0-.798.351-.594-.285.391-1.243.332-2.283-.283-2.887-1.418-1.395-5.189.053-8.435 3.244C.931 11.972 0 14.147 0 16.025c0 3.628 4.667 5.843 9.243 5.843 5.996 0 9.975-3.489 9.975-6.259 0-1.673-1.412-2.624-2.117-2.916z"/></svg>
-    </a>
-    <button class="float-btn" id="float-copy-btn" aria-label="Copy link">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-      </svg>
-    </button>
-  </aside>
-
-  <!-- Mobile Bottom Action Bar -->
-  <div class="mobile-actions" id="mobile-actions">
-    <button class="mobile-action-btn" id="mobile-like-btn" data-post={postSlug}>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-      <span id="mobile-like-count">0</span>
-    </button>
-    <button class="mobile-action-btn" id="mobile-bookmark-btn" data-post={postSlug}>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-    </button>
-    <button class="mobile-action-btn" id="mobile-share-btn">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-    </button>
-    <button class="mobile-action-btn" id="mobile-toc-btn">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-    </button>
-  </div>
 
   <!-- Mobile TOC Drawer -->
   <div class="toc-drawer" id="toc-drawer">
@@ -373,19 +315,6 @@ const faqSchema = faq.length > 0 ? {
         </div>
       </div>
 
-      <!-- Inline Actions -->
-      <div class="inline-actions">
-        <button class="action-btn like-btn" id="inline-like-btn" data-post={postSlug}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-          <span>{t.like}</span>
-          <span class="action-count" id="inline-like-count">0</span>
-        </button>
-        <button class="action-btn bookmark-btn" id="inline-bookmark-btn" data-post={postSlug}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-          <span>{t.bookmark}</span>
-        </button>
-      </div>
-
       <div class="footer-actions">
         <a href={`/${lang === 'en' ? 'en/' : ''}blog`} class="back-link">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -395,23 +324,12 @@ const faqSchema = faq.length > 0 ? {
           {t.backToBlog}
         </a>
 
-        <div class="share-buttons">
-          <span class="share-label">{t.share}:</span>
-          <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(Astro.url.href)}`} target="_blank" rel="noopener noreferrer" class="share-button" aria-label="Twitter">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-          </a>
-          <a href={`https://service.weibo.com/share/share.php?url=${encodeURIComponent(Astro.url.href)}&title=${encodeURIComponent(title)}`} target="_blank" rel="noopener noreferrer" class="share-button" aria-label={t.shareWeibo}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M10.098 20.323c-3.977.391-7.414-1.406-7.672-4.02-.259-2.609 2.759-5.047 6.74-5.441 3.979-.394 7.413 1.404 7.671 4.018.259 2.6-2.759 5.049-6.739 5.443zM9.05 17.219c-.384.616-1.208.884-1.829.602-.612-.279-.793-.991-.406-1.593.379-.595 1.176-.86 1.796-.584.625.28.825.978.439 1.575zm1.27-1.627c-.141.237-.449.353-.689.253-.236-.09-.307-.361-.158-.596.148-.234.456-.351.692-.243.239.09.315.36.155.586zm.176-2.719c-1.893-.494-4.036.45-4.857 2.118-.836 1.704-.026 3.591 1.886 4.21 1.983.642 4.318-.341 5.132-2.179.8-1.793-.201-3.642-2.161-4.149zm7.563-1.224c-.346-.105-.583-.176-.402-.636.396-1.005.436-1.872.009-2.496-.803-1.172-3.007-1.112-5.578-.033 0 0-.798.351-.594-.285.391-1.243.332-2.283-.283-2.887-1.418-1.395-5.189.053-8.435 3.244C.931 11.972 0 14.147 0 16.025c0 3.628 4.667 5.843 9.243 5.843 5.996 0 9.975-3.489 9.975-6.259 0-1.673-1.412-2.624-2.117-2.916z"/></svg>
-          </a>
-          <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(Astro.url.href)}`} target="_blank" rel="noopener noreferrer" class="share-button" aria-label="Facebook">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-          </a>
-          <button class="share-button" id="copy-link-btn" aria-label="Copy link">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-            </svg>
-          </button>
-        </div>
+        <button class="share-button" id="copy-link-btn" aria-label="Copy link">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+          </svg>
+          <span class="copy-label">{t.share}</span>
+        </button>
       </div>
 
       <!-- Prev/Next Navigation -->
@@ -449,12 +367,6 @@ const faqSchema = faq.length > 0 ? {
           </div>
         </div>
       )}
-
-      <!-- Giscus Comments -->
-      <div class="comments-section" id="comments-section">
-        <h3 class="comments-title">{t.comments}</h3>
-        <div class="giscus" id="giscus-container"></div>
-      </div>
     </div>
   </section>
 </BaseLayout>
@@ -506,155 +418,6 @@ const faqSchema = faq.length > 0 ? {
 
   .author-link:hover {
     text-decoration: underline;
-  }
-
-  /* Inline Actions */
-  .inline-actions {
-    display: flex;
-    gap: var(--space-4);
-    margin-bottom: var(--space-8);
-    padding: var(--space-4) 0;
-    border-top: 1px solid var(--color-border);
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .action-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-3) var(--space-5);
-    background: var(--color-bg-secondary);
-    color: var(--color-text-secondary);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-full);
-    font-size: var(--text-sm);
-    font-weight: 500;
-    cursor: pointer;
-    transition: border-color var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast);
-  }
-
-  .action-btn:hover {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-    background: var(--color-primary-light);
-  }
-
-  .action-btn.active {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-    background: var(--color-primary-light);
-  }
-
-  .action-btn.active svg {
-    fill: var(--color-primary);
-  }
-
-  .action-count {
-    font-weight: 600;
-  }
-
-  /* Floating Action Bar */
-  .floating-actions {
-    position: fixed;
-    left: max(1rem, calc((100vw - 1200px) / 2 - 70px));
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-2);
-    z-index: 100;
-    opacity: 0;
-    transition: opacity var(--transition-base);
-  }
-
-  .floating-actions.visible {
-    opacity: 1;
-  }
-
-  .float-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    background: var(--color-bg-primary);
-    color: var(--color-text-secondary);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    cursor: pointer;
-    text-decoration: none;
-    transition: border-color var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast);
-    position: relative;
-  }
-
-  .float-btn:hover {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-    background: var(--color-primary-light);
-  }
-
-  .float-btn.active {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-    background: var(--color-primary-light);
-  }
-
-  .float-btn.active svg {
-    fill: var(--color-primary);
-  }
-
-  .float-count {
-    font-size: 10px;
-    font-weight: 700;
-    line-height: 1;
-    margin-top: 2px;
-  }
-
-  .float-divider {
-    width: 24px;
-    height: 1px;
-    background: var(--color-border);
-    margin: var(--space-1) 0;
-  }
-
-  /* Mobile Bottom Action Bar */
-  .mobile-actions {
-    display: none;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: var(--color-bg-primary);
-    border-top: 1px solid var(--color-border);
-    padding: var(--space-2) var(--space-4);
-    justify-content: space-around;
-    z-index: 100;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-  }
-
-  .mobile-action-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    padding: var(--space-2);
-    background: none;
-    border: none;
-    color: var(--color-text-secondary);
-    font-size: 11px;
-    cursor: pointer;
-    transition: color var(--transition-fast);
-  }
-
-  .mobile-action-btn:hover,
-  .mobile-action-btn.active {
-    color: var(--color-primary);
-  }
-
-  .mobile-action-btn.active svg {
-    fill: var(--color-primary);
   }
 
   /* TOC Drawer (mobile) */
@@ -749,19 +512,6 @@ const faqSchema = faq.length > 0 ? {
 
   .toc-drawer-overlay.open {
     display: block;
-  }
-
-  /* Comments Section */
-  .comments-section {
-    margin-top: var(--space-12);
-    padding-top: var(--space-8);
-    border-top: 1px solid var(--color-border);
-  }
-
-  .comments-title {
-    font-size: var(--text-2xl);
-    font-weight: 700;
-    margin-bottom: var(--space-6);
   }
 
   /* Article Header */
@@ -1097,36 +847,28 @@ const faqSchema = faq.length > 0 ? {
     text-decoration: none;
   }
 
-  .share-buttons {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-  }
-
-  .share-label {
-    font-size: var(--text-sm);
-    color: var(--color-text-tertiary);
-  }
-
   .share-button {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
     background-color: var(--color-bg-tertiary);
     color: var(--color-text-secondary);
     border-radius: var(--radius-lg);
     border: none;
     cursor: pointer;
-    text-decoration: none;
-    transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
   }
 
   .share-button:hover {
     background-color: var(--color-primary);
     color: white;
-    transform: translateY(-2px);
+  }
+
+  .copy-label {
+    line-height: 1;
   }
 
   /* Reading Progress Bar */
@@ -1263,7 +1005,6 @@ const faqSchema = faq.length > 0 ? {
     .content-wrapper { grid-template-columns: 1fr; }
     .toc-sidebar { display: none; }
     .related-grid { grid-template-columns: repeat(2, 1fr); }
-    .floating-actions { display: none; }
   }
 
   @media (max-width: 768px) {
@@ -1272,141 +1013,23 @@ const faqSchema = faq.length > 0 ? {
     .article-description { font-size: var(--text-base); }
     .article-meta { flex-direction: column; gap: var(--space-3); }
     .footer-actions { flex-direction: column; gap: var(--space-4); }
-    .share-buttons { width: 100%; justify-content: center; }
     .post-navigation { grid-template-columns: 1fr; }
     .related-grid { grid-template-columns: 1fr; }
-    .mobile-actions { display: flex; }
-    .article-footer { padding-bottom: 5rem; }
     .author-card { flex-direction: column; text-align: center; }
-    .inline-actions { justify-content: center; }
   }
 </style>
 
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    const postSlug = document.querySelector('[data-post]')?.getAttribute('data-post') || 'unknown';
-    const likeKey = `likes_${postSlug}`;
-    const bookmarkKey = `bookmark_${postSlug}`;
-
-    // === Like System (localStorage) ===
-    function getLikeCount() {
-      return parseInt(localStorage.getItem(likeKey) || '0', 10);
-    }
-
-    function isLiked() {
-      return localStorage.getItem(`${likeKey}_active`) === 'true';
-    }
-
-    function toggleLike() {
-      const currentlyLiked = isLiked();
-      const count = getLikeCount();
-      if (currentlyLiked) {
-        localStorage.setItem(likeKey, String(Math.max(0, count - 1)));
-        localStorage.removeItem(`${likeKey}_active`);
-      } else {
-        localStorage.setItem(likeKey, String(count + 1));
-        localStorage.setItem(`${likeKey}_active`, 'true');
-      }
-      updateLikeUI();
-    }
-
-    function updateLikeUI() {
-      const count = getLikeCount();
-      const liked = isLiked();
-      // Floating bar
-      const floatBtn = document.getElementById('float-like-btn');
-      const floatCount = document.getElementById('float-like-count');
-      if (floatBtn) floatBtn.classList.toggle('active', liked);
-      if (floatCount) floatCount.textContent = count > 0 ? String(count) : '';
-      // Inline
-      const inlineBtn = document.getElementById('inline-like-btn');
-      const inlineCount = document.getElementById('inline-like-count');
-      if (inlineBtn) inlineBtn.classList.toggle('active', liked);
-      if (inlineCount) inlineCount.textContent = count > 0 ? String(count) : '';
-      // Mobile
-      const mobileBtn = document.getElementById('mobile-like-btn');
-      const mobileCount = document.getElementById('mobile-like-count');
-      if (mobileBtn) mobileBtn.classList.toggle('active', liked);
-      if (mobileCount) mobileCount.textContent = count > 0 ? String(count) : '';
-    }
-
-    document.querySelectorAll('.like-btn').forEach(btn => {
-      btn.addEventListener('click', toggleLike);
-    });
-
-    // === Bookmark System (localStorage) ===
-    function isBookmarked() {
-      return localStorage.getItem(bookmarkKey) === 'true';
-    }
-
-    function toggleBookmark() {
-      const currentlySaved = isBookmarked();
-      if (currentlySaved) {
-        localStorage.removeItem(bookmarkKey);
-      } else {
-        localStorage.setItem(bookmarkKey, 'true');
-      }
-      updateBookmarkUI();
-    }
-
-    function updateBookmarkUI() {
-      const saved = isBookmarked();
-      const floatBtn = document.getElementById('float-bookmark-btn');
-      if (floatBtn) floatBtn.classList.toggle('active', saved);
-      const inlineBtn = document.getElementById('inline-bookmark-btn');
-      if (inlineBtn) {
-        inlineBtn.classList.toggle('active', saved);
-        const labelSpan = inlineBtn.querySelector('span:not(.action-count)');
-        if (labelSpan) labelSpan.textContent = saved ? '已收藏' : '收藏';
-      }
-      const mobileBtn = document.getElementById('mobile-bookmark-btn');
-      if (mobileBtn) mobileBtn.classList.toggle('active', saved);
-    }
-
-    document.querySelectorAll('.bookmark-btn').forEach(btn => {
-      btn.addEventListener('click', toggleBookmark);
-    });
-
-    // Init UI
-    updateLikeUI();
-    updateBookmarkUI();
-
-    // === Floating Actions Visibility ===
-    const floatingActions = document.getElementById('floating-actions');
-    if (floatingActions) {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach(entry => {
-            floatingActions.classList.toggle('visible', entry.isIntersecting);
-          });
-        },
-        { threshold: 0.1 }
-      );
-      const articleBody = document.querySelector('.article-body');
-      if (articleBody) observer.observe(articleBody);
-    }
-
     // === Copy Link ===
     const copyLinkBtn = document.getElementById('copy-link-btn');
-    const floatCopyBtn = document.getElementById('float-copy-btn');
-    async function copyLink() {
+    copyLinkBtn?.addEventListener('click', async () => {
       try {
         await navigator.clipboard.writeText(window.location.href);
-        const checkSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
-        if (copyLinkBtn) { copyLinkBtn.innerHTML = checkSvg; setTimeout(() => { copyLinkBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`; }, 2000); }
-        if (floatCopyBtn) { floatCopyBtn.innerHTML = checkSvg; setTimeout(() => { floatCopyBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`; }, 2000); }
+        const originalHTML = copyLinkBtn.innerHTML;
+        copyLinkBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>✓</span>`;
+        setTimeout(() => { copyLinkBtn.innerHTML = originalHTML; }, 2000);
       } catch (err) { console.error('Failed to copy:', err); }
-    }
-    copyLinkBtn?.addEventListener('click', copyLink);
-    floatCopyBtn?.addEventListener('click', copyLink);
-
-    // === Mobile Share ===
-    document.getElementById('mobile-share-btn')?.addEventListener('click', () => {
-      if (navigator.share) {
-        navigator.share({ title: document.title, url: window.location.href });
-      } else {
-        copyLink();
-      }
     });
 
     // === Mobile TOC Drawer ===
@@ -1538,39 +1161,5 @@ const faqSchema = faq.length > 0 ? {
       });
       (img as HTMLElement).style.cursor = 'zoom-in';
     });
-
-    // === Giscus Comments ===
-    const giscusContainer = document.getElementById('giscus-container');
-    if (giscusContainer) {
-      const theme = document.documentElement.getAttribute('data-theme') || 'light';
-      const script = document.createElement('script');
-      script.src = 'https://giscus.app/client.js';
-      script.setAttribute('data-repo', 'xinggu/blog-comments');
-      script.setAttribute('data-repo-id', '');
-      script.setAttribute('data-category', 'Announcements');
-      script.setAttribute('data-category-id', '');
-      script.setAttribute('data-mapping', 'pathname');
-      script.setAttribute('data-strict', '0');
-      script.setAttribute('data-reactions-enabled', '1');
-      script.setAttribute('data-emit-metadata', '0');
-      script.setAttribute('data-input-position', 'top');
-      script.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
-      script.setAttribute('data-lang', document.documentElement.lang || 'zh-CN');
-      script.setAttribute('data-loading', 'lazy');
-      script.crossOrigin = 'anonymous';
-      script.async = true;
-      giscusContainer.appendChild(script);
-
-      // Update giscus theme when site theme changes
-      const observer = new MutationObserver(() => {
-        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-        const iframe = document.querySelector<HTMLIFrameElement>('iframe.giscus-frame');
-        iframe?.contentWindow?.postMessage(
-          { giscus: { setConfig: { theme: currentTheme === 'dark' ? 'dark' : 'light' } } },
-          'https://giscus.app'
-        );
-      });
-      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    }
   });
 </script>
