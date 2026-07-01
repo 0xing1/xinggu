@@ -12,6 +12,7 @@ export interface Props {
   href: string;
   lang?: "zh" | "en";
   variant?: "h2" | "h3";
+  featured?: boolean;
 }
 
 const {
@@ -25,19 +26,43 @@ const {
   href,
   lang = "zh",
   variant: Heading = "h2",
+  featured = false,
 } = Astro.props;
+
+// 估算阅读时间
+const estimatedWords = Math.max(300, description.length * 8);
+const readingTime = Math.max(1, Math.ceil(estimatedWords / (lang === 'zh' ? 400 : 200)));
+
+// 判断是否为"新"文章（7天内发布）
+const isNew = Date.now() - pubDate.valueOf() < 7 * 24 * 60 * 60 * 1000;
+
+// 判断是否"已更新"（发布后7天以上且有更新）
+const isUpdated = updatedDate && updatedDate !== pubDate &&
+  Date.now() - updatedDate.valueOf() < 7 * 24 * 60 * 60 * 1000 &&
+  Date.now() - pubDate.valueOf() > 7 * 24 * 60 * 60 * 1000;
 ---
 
-<li class="card">
+<li class:list={["card", { featured }]}>
   <a href={href} class="card-link">
     {heroImage && (
       <div class="card-image">
         <img src={heroImage} alt={title} loading="lazy" decoding="async" width="400" height="225" />
         {category && <span class="card-category">{category}</span>}
+        {isNew && <span class="card-badge badge-new">{lang === 'zh' ? '新' : 'NEW'}</span>}
+        {isUpdated && <span class="card-badge badge-updated">{lang === 'zh' ? '更新' : 'UPDATED'}</span>}
+        {featured && <span class="card-badge badge-featured">{lang === 'zh' ? '推荐' : 'FEATURED'}</span>}
       </div>
     )}
     <div class="card-content">
-      <Datetime pubDatetime={pubDate} modDatetime={updatedDate} lang={lang} />
+      <div class="card-meta-row">
+        <Datetime pubDatetime={pubDate} modDatetime={updatedDate} lang={lang} />
+        <span class="card-reading-time">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          {readingTime}{lang === 'zh' ? '分钟' : 'min'}
+        </span>
+      </div>
       <Heading class="card-title">{title}</Heading>
       <p class="card-description">{description}</p>
       {tags.length > 0 && (
@@ -69,6 +94,11 @@ const {
     to { opacity: 1; transform: translateY(0); }
   }
 
+  .card.featured .card-link {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 1px var(--color-primary-light);
+  }
+
   .card-link {
     display: block;
     text-decoration: none;
@@ -76,7 +106,7 @@ const {
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);
     overflow: hidden;
-    transition: all var(--transition-base);
+    transition: border-color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base);
     background: var(--color-bg-primary);
   }
 
@@ -116,12 +146,55 @@ const {
     border-radius: var(--radius-full);
   }
 
+  .card-badge {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    border-radius: var(--radius-sm);
+    text-transform: uppercase;
+  }
+
+  .badge-new {
+    background-color: #10b981;
+    color: white;
+  }
+
+  .badge-updated {
+    background-color: #f59e0b;
+    color: white;
+  }
+
+  .badge-featured {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    color: white;
+  }
+
   .card-content {
     padding: 1.5rem;
   }
 
-  .card-content :global(.datetime) {
+  .card-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     margin-bottom: 0.75rem;
+  }
+
+  .card-meta-row :global(.datetime) {
+    margin-bottom: 0;
+  }
+
+  .card-reading-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    flex-shrink: 0;
   }
 
   .card-title {
@@ -131,6 +204,7 @@ const {
     margin-bottom: 0.75rem;
     color: var(--color-text-primary);
     transition: color var(--transition-fast);
+    text-wrap: balance;
   }
 
   .card-link:hover .card-title {

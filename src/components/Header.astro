@@ -39,6 +39,12 @@ const navItems = lang === "zh"
 const searchPath = lang === "en" ? "/en/search" : "/search";
 const homePath = lang === "en" ? "/en/" : "/";
 const rssPath = lang === "en" ? "/en/rss.xml" : "/rss.xml";
+
+// Language switcher
+const currentSlug = currentPath.replace(/^\/en\//, '/').replace(/^\//, '');
+const langSwitchPath = lang === "en"
+  ? `/${currentSlug}`
+  : `/en/${currentSlug}`;
 ---
 
 <a id="skip-to-content" href="#main-content" class="skip-to-content">{t.skipToContent}</a>
@@ -57,6 +63,13 @@ const rssPath = lang === "en" ? "/en/rss.xml" : "/rss.xml";
     </nav>
 
     <div class="header-tools">
+      <a href={langSwitchPath} class="tool-btn lang-switch" title={lang === "zh" ? "English" : "中文"} aria-label={lang === "zh" ? "Switch to English" : "切换到中文"}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+        <span class="lang-label">{lang === "zh" ? "EN" : "中"}</span>
+      </a>
+
       <a href={searchPath} class="tool-btn" title={t.search} aria-label={t.search}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -154,6 +167,19 @@ const rssPath = lang === "en" ? "/en/rss.xml" : "/rss.xml";
     color: #fff; background: var(--color-primary); border-color: var(--color-primary);
   }
 
+  /* Language switcher */
+  .lang-switch {
+    gap: 0.25rem;
+    width: auto;
+    padding: 0 0.625rem;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .lang-label {
+    line-height: 1;
+  }
+
   /* Theme toggle - extra visible */
   .theme-toggle {
     color: var(--color-primary); background: var(--color-primary-light);
@@ -219,9 +245,7 @@ const rssPath = lang === "en" ? "/en/rss.xml" : "/rss.xml";
       localStorage.setItem('theme', theme);
       if (sunIcon) sunIcon.style.display = theme === 'dark' ? 'none' : 'block';
       if (moonIcon) moonIcon.style.display = theme === 'dark' ? 'block' : 'none';
-      // Update header bg
-      var header = document.getElementById('site-header');
-      if (header) header.style.background = theme === 'dark' ? '#0f172a' : '';
+      // Header bg is handled by CSS data-theme selector
       // Update theme-color meta tag (for browser chrome)
       var meta = document.querySelector("meta[name='theme-color']");
       if (meta) {

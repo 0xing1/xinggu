@@ -1,0 +1,26 @@
+{
+  "name": "星谷的技术博客",
+  "short_name": "星谷",
+  "description": "分享前端开发、编程技巧和技术见解",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["technology", "blog"],
+  "links": [
+    {
+      "rel": "alternate",
+      "href": "/en/",
+      "hreflang": "en"
+    }
+  ]
+}
