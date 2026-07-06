@@ -1,0 +1,57 @@
+---
+import CategoryList from "./CategoryList.astro";
+import TagCloud from "./TagCloud.astro";
+import RecentPosts from "./RecentPosts.astro";
+import RssCard from "./RssCard.astro";
+
+export interface Props {
+  categories: string[];
+  postCounts: Record<string, number>;
+  tags: string[];
+  recentPosts: Array<{
+    title: string;
+    pubDate: Date;
+    href: string;
+  }>;
+  lang?: "zh" | "en";
+  prefix?: string;
+}
+
+const { categories, postCounts, tags, recentPosts, lang = "zh", prefix = "" } = Astro.props;
+---
+
+<aside class="sidebar">
+  <RecentPosts posts={recentPosts} lang={lang} />
+
+  {categories.length > 0 && (
+    <CategoryList
+      categories={categories}
+      postCounts={postCounts}
+      lang={lang}
+      prefix={prefix}
+    />
+  )}
+
+  {tags.length > 0 && (
+    <TagCloud tags={tags} lang={lang} prefix={prefix} />
+  )}
+
+  <RssCard lang={lang} />
+</aside>
+
+<style>
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: sticky;
+    top: 80px;
+    align-self: flex-start;
+  }
+
+  @media (max-width: 768px) {
+    .sidebar {
+      position: static;
+    }
+  }
+</style>

@@ -1,0 +1,93 @@
+---
+export interface Props {
+  lang?: "zh" | "en";
+}
+
+const { lang = "zh" } = Astro.props;
+
+const t = {
+  title: lang === "zh" ? "订阅 RSS" : "Subscribe RSS",
+  desc: lang === "zh" ? "获取最新文章更新" : "Get new posts delivered",
+  btn: lang === "zh" ? "订阅" : "Subscribe",
+};
+
+const rssPath = lang === "en" ? "/en/rss.xml" : "/rss.xml";
+---
+
+<div class="sidebar-section rss-card">
+  <div class="rss-icon">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/>
+    </svg>
+  </div>
+  <h3 class="rss-title">{t.title}</h3>
+  <p class="rss-desc">{t.desc}</p>
+  <a href={rssPath} class="rss-btn" target="_blank" rel="noopener noreferrer">
+    {t.btn}
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+    </svg>
+  </a>
+</div>
+
+<style>
+  .sidebar-section {
+    padding: 1.5rem;
+    background: var(--color-bg-primary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+  }
+
+  .rss-card {
+    text-align: center;
+    background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-bg-primary) 100%);
+    border-color: var(--color-primary);
+  }
+
+  .rss-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background-color: var(--color-primary);
+    color: white;
+    border-radius: var(--radius-full);
+    margin-bottom: 1rem;
+  }
+
+  .rss-title {
+    font-size: var(--text-base);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .rss-desc {
+    font-size: var(--text-sm);
+    color: var(--color-text-tertiary);
+    margin-bottom: 1rem;
+  }
+
+  .rss-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    background-color: var(--color-primary);
+    color: white;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+  }
+
+  .rss-btn:hover {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    color: white;
+    text-decoration: none;
+  }
+</style>

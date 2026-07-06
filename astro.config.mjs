@@ -3,7 +3,7 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
-  site: 'https://xinggu.com',
+  site: 'https://xinggu-blog.pages.dev',
   integrations: [
     mdx(),
     sitemap({

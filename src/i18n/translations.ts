@@ -67,6 +67,16 @@ export const UI = {
     adminPassword: "密码",
     adminSubmit: "登录",
     adminWrongPassword: "密码错误",
+    // Sidebar
+    sidebarLatest: "最新文章",
+    sidebarCategories: "文章分类",
+    sidebarTags: "热门标签",
+    sidebarSubscribe: "订阅 RSS",
+    sidebarSubscribeDesc: "获取最新文章更新",
+    postsCount: "篇文章",
+    // Featured
+    featuredHighlight: "推荐阅读",
+    readArticle: "阅读全文",
   },
   en: {
     siteTitle: "Xinggu's Tech Blog",
@@ -136,6 +146,16 @@ export const UI = {
     adminPassword: "Password",
     adminSubmit: "Login",
     adminWrongPassword: "Incorrect password",
+    // Sidebar
+    sidebarLatest: "Latest Posts",
+    sidebarCategories: "Categories",
+    sidebarTags: "Popular Tags",
+    sidebarSubscribe: "Subscribe RSS",
+    sidebarSubscribeDesc: "Get new posts delivered",
+    postsCount: "posts",
+    // Featured
+    featuredHighlight: "Recommended",
+    readArticle: "Read Article",
   },
 } as const;
 

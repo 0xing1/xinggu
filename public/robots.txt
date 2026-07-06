@@ -5,4 +5,4 @@ Disallow: /api/
 Disallow: /en/admin/
 Disallow: /en/api/
 
-Sitemap: https://xinggu.com/sitemap-index.xml
+Sitemap: https://xinggu-blog.pages.dev/sitemap-index.xml

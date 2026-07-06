@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Card from '../../components/Card.astro';
+import Sidebar from '../../components/Sidebar.astro';
 import Pagination from '../../components/Pagination.astro';
 import { getCollection } from 'astro:content';
 import { SITE } from '../../config';
@@ -27,6 +28,7 @@ const { page = 1, totalPages } = Astro.props;
 
 const lang = 'zh';
 const t = UI[lang];
+const prefix = '';
 
 const allPosts = await getCollection('blog', ({ data }) => data.lang === 'zh' && !data.draft);
 const sortedPosts = allPosts.sort(
@@ -38,6 +40,10 @@ const end = start + SITE.postPerPage;
 const paginatedPosts = sortedPosts.slice(start, end);
 
 const categories = [...new Set(allPosts.map((post) => post.data.category).filter(Boolean))];
+const postCounts: Record<string, number> = {};
+for (const cat of categories) {
+  postCounts[cat] = allPosts.filter(p => p.data.category === cat).length;
+}
 const allTags = allPosts.flatMap((post) => post.data.tags ?? []);
 const uniqueTags = [...new Set(allTags)];
 
@@ -48,6 +54,13 @@ const pageTitle = page === 1 ? `${t.blog} - ${t.siteTitle}` : `${t.blog} ${t.all
 const pageDescription = page === 1
   ? `${t.blogStats} - ${sortedPosts.length} ${t.posts}, ${categories.length} ${t.categoryCount}, ${uniqueTags.length} ${t.tagCount}`
   : `${t.blog} ${t.allPosts} - ${t.allPosts} ${page} / ${totalPages}`;
+
+// Recent posts for sidebar
+const recentPostsForSidebar = sortedPosts.slice(0, 5).map(post => ({
+  title: post.data.title,
+  pubDate: post.data.pubDate,
+  href: `/blog/${post.id.replace(/^zh\//, '')}`,
+}));
 ---
 
 <BaseLayout title={pageTitle} description={pageDescription} lang={lang}>
@@ -118,49 +131,64 @@ const pageDescription = page === 1
     </div>
   </section>
 
-  <!-- Posts List -->
+  <!-- Posts List + Sidebar -->
   <section class="posts-section">
     <div class="container">
-      {
-        paginatedPosts.length > 0 ? (
-          <ul class="posts-grid">
-            {paginatedPosts.map((post, index) => (
-              <Card
-                title={post.data.title}
-                description={post.data.description}
-                pubDate={post.data.pubDate}
-                updatedDate={post.data.updatedDate}
-                category={post.data.category}
-                tags={post.data.tags}
-                heroImage={post.data.heroImage}
-                href={`/blog/${post.id.replace(/^zh\//, '')}`}
-                lang={lang}
-                variant="h2"
-              />
-            ))}
-          </ul>
-        ) : (
-          <div class="empty-state">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/>
-              <line x1="16" y1="17" x2="8" y2="17"/>
-              <polyline points="10 9 9 9 8 9"/>
-            </svg>
-            <h3>{t.noPosts}</h3>
-            <p>{t.noPostsInCategory}</p>
-          </div>
-        )
-      }
+      <div class="content-layout">
+        <!-- Left: Posts -->
+        <div class="posts-column">
+          {
+            paginatedPosts.length > 0 ? (
+              <ul class="posts-grid">
+                {paginatedPosts.map((post, index) => (
+                  <Card
+                    title={post.data.title}
+                    description={post.data.description}
+                    pubDate={post.data.pubDate}
+                    updatedDate={post.data.updatedDate}
+                    category={post.data.category}
+                    tags={post.data.tags}
+                    heroImage={post.data.heroImage}
+                    href={`/blog/${post.id.replace(/^zh\//, '')}`}
+                    lang={lang}
+                    variant="h2"
+                  />
+                ))}
+              </ul>
+            ) : (
+              <div class="empty-state">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10 9 9 9 8 9"/>
+                </svg>
+                <h3>{t.noPosts}</h3>
+                <p>{t.noPostsInCategory}</p>
+              </div>
+            )
+          }
 
-      <Pagination
-        prevUrl={prevUrl}
-        nextUrl={nextUrl}
-        currentPage={page}
-        totalPages={totalPages}
-        lang={lang}
-      />
+          <Pagination
+            prevUrl={prevUrl}
+            nextUrl={nextUrl}
+            currentPage={page}
+            totalPages={totalPages}
+            lang={lang}
+          />
+        </div>
+
+        <!-- Right: Sidebar -->
+        <Sidebar
+          categories={categories}
+          postCounts={postCounts}
+          tags={uniqueTags}
+          recentPosts={recentPostsForSidebar}
+          lang={lang}
+          prefix={prefix}
+        />
+      </div>
     </div>
   </section>
 </BaseLayout>
@@ -323,14 +351,21 @@ const pageDescription = page === 1
     opacity: 0.7;
   }
 
-  /* Posts Grid */
+  /* Posts Section */
   .posts-section {
     padding: 3rem 0 4rem;
   }
 
+  .content-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 2.5rem;
+    align-items: flex-start;
+  }
+
   .posts-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
     list-style: none;
     padding: 0;
@@ -393,6 +428,10 @@ const pageDescription = page === 1
 
   /* Responsive */
   @media (max-width: 1024px) {
+    .content-layout {
+      grid-template-columns: 1fr;
+    }
+
     .posts-grid {
       grid-template-columns: repeat(2, 1fr);
     }

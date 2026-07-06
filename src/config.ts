@@ -4,9 +4,9 @@
  */
 
 export const SITE = {
-  website: "https://xinggu.com",
+  website: "https://xinggu-blog.pages.dev",
   author: "星谷",
-  profile: "https://xinggu.com/about",
+  profile: "https://xinggu-blog.pages.dev/about",
   desc: "分享前端开发、编程技巧和技术见解",
   title: "星谷的技术博客",
   ogImage: "/og-image.svg",

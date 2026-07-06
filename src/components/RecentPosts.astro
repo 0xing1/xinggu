@@ -1,0 +1,104 @@
+---
+export interface Props {
+  posts: Array<{
+    title: string;
+    pubDate: Date;
+    href: string;
+  }>;
+  lang?: "zh" | "en";
+  limit?: number;
+}
+
+const { posts, lang = "zh", limit = 5 } = Astro.props;
+
+const title = lang === "zh" ? "最新文章" : "Latest Posts";
+const displayPosts = posts.slice(0, limit);
+
+function formatDate(date: Date, lang: string): string {
+  if (lang === "zh") {
+    const m = date.getMonth() + 1;
+    const d = date.getDate();
+    return `${m}月${d}日`;
+  }
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+---
+
+<div class="sidebar-section">
+  <h3 class="sidebar-heading">{title}</h3>
+  <ul class="recent-list">
+    {displayPosts.map((post) => (
+      <li>
+        <a href={post.href} class="recent-link">
+          <span class="recent-date">{formatDate(post.pubDate, lang)}</span>
+          <span class="recent-title">{post.title}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</div>
+
+<style>
+  .sidebar-section {
+    padding: 1.5rem;
+    background: var(--color-bg-primary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+  }
+
+  .sidebar-heading {
+    font-size: var(--text-base);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--color-primary);
+  }
+
+  .recent-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .recent-link {
+    display: block;
+    padding: 0.75rem 0;
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border);
+    transition: all var(--transition-fast);
+  }
+
+  .recent-link:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .recent-link:first-child {
+    padding-top: 0;
+  }
+
+  .recent-link:hover {
+    text-decoration: none;
+  }
+
+  .recent-date {
+    display: block;
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    margin-bottom: 0.25rem;
+  }
+
+  .recent-title {
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    line-height: var(--leading-snug);
+    transition: color var(--transition-fast);
+  }
+
+  .recent-link:hover .recent-title {
+    color: var(--color-primary);
+  }
+</style>
