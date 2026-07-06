@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(git *)",
+      "Bash(gh *)",
+      "Bash(npx wrangler *)",
+      "Bash(export CLOUDFLARE_API_TOKEN=*)",
+      "Bash(export CLOUDFLARE_ACCOUNT_ID=*)"
+    ]
+  }
+}
