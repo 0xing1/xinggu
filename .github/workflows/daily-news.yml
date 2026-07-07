@@ -2,8 +2,8 @@ name: Daily News Update
 
 on:
   schedule:
-    # 每天早上 8:00 UTC (北京时间 16:00) 运行
-    - cron: '0 8 * * *'
+    # 每天早上 0:00 UTC (北京时间 8:00) 运行
+    - cron: '0 0 * * *'
   workflow_dispatch: # 允许手动触发
 
 permissions:
