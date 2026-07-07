@@ -11,6 +11,8 @@ const t = {
   link2: "Tolink",
   link3: "ABShare",
   link4: "ToShare",
+  link5: "Allblue",
+  link6: "Mikasa",
   desc: lang === "zh" ? "V2Ray / Clash" : "V2Ray / Clash",
 };
 
@@ -18,6 +20,8 @@ const subPath = lang === "en" ? "/en/blog/sub" : "/blog/sub";
 const tolinkPath = lang === "en" ? "/en/blog/tolink" : "/blog/tolink";
 const absharePath = lang === "en" ? "/en/blog/abshare" : "/blog/abshare";
 const tosharePath = lang === "en" ? "/en/blog/toshare" : "/blog/toshare";
+const allbluePath = lang === "en" ? "/en/blog/allblue" : "/blog/allblue";
+const mksharePath = lang === "en" ? "/en/blog/mkshare" : "/blog/mkshare";
 ---
 
 <div class="sub-card">
@@ -29,6 +33,10 @@ const tosharePath = lang === "en" ? "/en/blog/toshare" : "/blog/toshare";
   <a href={absharePath} class="sub-link">{t.link3}</a>
   <span class="sub-sep">|</span>
   <a href={tosharePath} class="sub-link">{t.link4}</a>
+  <span class="sub-sep">|</span>
+  <a href={allbluePath} class="sub-link">{t.link5}</a>
+  <span class="sub-sep">|</span>
+  <a href={mksharePath} class="sub-link">{t.link6}</a>
   <span class="sub-desc">{t.desc}</span>
 </div>
 
