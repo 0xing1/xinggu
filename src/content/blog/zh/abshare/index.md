@@ -18,7 +18,7 @@ lang: "zh"
 **V2Ray / Clash / 小火箭 通用订阅：**
 
 ```
-https://PHm75i.absslk.xyz/b2836928fabd17d44993211e933b5c5a
+https://apfSgk.absslk.xyz/f99924fbf484b26d945fafd299111e20
 ```
 
 ---

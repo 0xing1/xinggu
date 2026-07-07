@@ -63,6 +63,14 @@ async function fetchUrl(url) {
   return await retry(() => httpsGet(url));
 }
 
+// 从上游README中提取最新的订阅链接
+async function extractLatestSubUrl(repo) {
+  const readme = await fetchGitHubFile(repo, 'README.md');
+  // 匹配 "免费Clash订阅链接" 后面代码块中的URL
+  const match = readme.match(/免费Clash订阅链接[\s\S]*?```\s*\n?(https?:\/\/[^\s`]+)\s*\n?```/i);
+  return match ? match[1].trim() : null;
+}
+
 function decodeBase64(str) {
   try {
     const d = Buffer.from(str.trim(), 'base64').toString('utf-8');
@@ -218,10 +226,32 @@ async function main() {
       markdown = genGitHubPost(src, results);
     } else {
       try {
-        const raw = await fetchUrl(src.url);
+        // 先从上游README提取最新订阅链接
+        let latestUrl = src.url;
+        try {
+          const extracted = await extractLatestSubUrl(src.repo);
+          if (extracted) {
+            latestUrl = extracted;
+            console.log(`    🔗 从上游提取到最新链接: ${latestUrl.substring(0, 50)}...`);
+          } else {
+            console.log(`    ⚠️ 未从上游提取到链接，使用config中的链接`);
+          }
+        } catch (e) {
+          console.log(`    ⚠️ 提取上游链接失败: ${e.message}，使用config中的链接`);
+        }
+
+        const raw = await fetchUrl(latestUrl);
         const content = decodeBase64(raw);
-        markdown = genUrlPost(src, content);
+        // 用最新URL生成文章
+        markdown = genUrlPost({ ...src, url: latestUrl }, content);
         console.log(`    ✅ 获取成功`);
+
+        // 如果URL变了，更新config文件
+        if (latestUrl !== src.url) {
+          src.url = latestUrl;
+          fs.writeFileSync(SOURCES_PATH, JSON.stringify(sources, null, 2) + '\n', 'utf-8');
+          console.log(`    📝 已更新 sub-sources.json 中的链接`);
+        }
       } catch (e) {
         console.log(`    ❌ 获取失败: ${e.message}`);
         continue;
