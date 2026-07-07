@@ -7,16 +7,20 @@ const { lang = "zh" } = Astro.props;
 
 const t = {
   title: lang === "zh" ? "工具" : "Tools",
-  link: lang === "zh" ? "免费订阅节点" : "Free Subscriptions",
+  link1: lang === "zh" ? "免费订阅" : "Free Subs",
+  link2: "Tolink",
   desc: lang === "zh" ? "V2Ray / Clash" : "V2Ray / Clash",
 };
 
 const subPath = lang === "en" ? "/en/blog/sub" : "/blog/sub";
+const tolinkPath = lang === "en" ? "/en/blog/tolink" : "/blog/tolink";
 ---
 
 <div class="sub-card">
   <span class="sub-label">{t.title}</span>
-  <a href={subPath} class="sub-link">{t.link}</a>
+  <a href={subPath} class="sub-link">{t.link1}</a>
+  <span class="sub-sep">|</span>
+  <a href={tolinkPath} class="sub-link">{t.link2}</a>
   <span class="sub-desc">{t.desc}</span>
 </div>
 
@@ -44,6 +48,10 @@ const subPath = lang === "en" ? "/en/blog/sub" : "/blog/sub";
 
   .sub-link:hover {
     color: var(--color-primary);
+  }
+
+  .sub-sep {
+    opacity: 0.3;
   }
 
   .sub-desc {
