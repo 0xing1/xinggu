@@ -78,10 +78,13 @@ function generateMarkdown(links, postUrl) {
     minute: '2-digit',
   });
 
+  // 修复：sv-SE locale 已包含秒数，不需要再加 :00
+  const pubDate = now.toLocaleString('sv-SE', { timeZone: 'Asia/Shanghai' }).replace(' ', 'T') + '+08:00';
+
   return `---
 title: "米贝每日节点"
 description: "米贝分享每日免费节点，每小时自动更新。"
-pubDate: ${now.toLocaleString('sv-SE', { timeZone: 'Asia/Shanghai' }).replace(' ', 'T')}:00+08:00
+pubDate: ${pubDate}
 category: "订阅"
 tags: ["v2ray", "clash", "翻墙", "订阅", "免费", "米贝"]
 lang: "zh"
