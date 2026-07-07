@@ -85,7 +85,7 @@ function makeDateStr() {
   return {
     date: now.toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' }),
     time: now.toLocaleTimeString('zh-CN', { timeZone: 'Asia/Shanghai', hour: '2-digit', minute: '2-digit' }),
-    isoDate: now.toISOString().split('T')[0],
+    isoDate: now.toLocaleString('sv-SE', { timeZone: 'Asia/Shanghai' }).replace(' ', 'T') + ':00+08:00',
   };
 }
 

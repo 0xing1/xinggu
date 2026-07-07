@@ -1,7 +1,7 @@
 ---
 title: "免费订阅 - V2Ray / Clash"
 description: "自动更新的 V2Ray 和 Clash 订阅链接。每小时自动更新。"
-pubDate: 2026-07-07
+pubDate: 2026-07-07T08:26:00+08:00
 category: "订阅"
 tags: ["v2ray", "clash", "翻墙", "订阅", "免费"]
 lang: "zh"

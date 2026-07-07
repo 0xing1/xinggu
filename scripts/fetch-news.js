@@ -14,9 +14,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.join(__dirname, '..');
 
-// 日期格式化
+// 日期格式化（用于文件名）
 function formatDate(date) {
   return date.toISOString().split('T')[0];
+}
+
+// 日期时间格式化（用于pubDate，北京时间）
+function formatDateTime(date) {
+  return date.toLocaleString('sv-SE', { timeZone: 'Asia/Shanghai' }).replace(' ', 'T') + ':00+08:00';
 }
 
 function formatDateChinese(date) {
@@ -225,7 +230,7 @@ function generateNewsArticle(date, newsItems) {
   const content = `---
 title: "前沿科技速递 - ${dateChinese}"
 description: "${dateChinese}（星期${weekday}）最新前沿科技新闻，涵盖 AI、芯片、量子计算、新能源等领域。"
-pubDate: ${dateStr}
+pubDate: ${formatDateTime(date)}
 category: "科技前沿"
 tags: ["科技", "前沿", "AI", "芯片", "创新"]
 lang: "zh"
@@ -264,7 +269,7 @@ function generateEnglishNewsArticle(date, newsItems) {
   return `---
 title: "Tech Frontier Digest - ${dateEnglish}"
 description: "Latest cutting-edge technology news for ${dateEnglish}, covering AI, chips, quantum computing, and more."
-pubDate: ${dateStr}
+pubDate: ${formatDateTime(date)}
 category: "Tech Frontier"
 tags: ["tech", "frontier", "AI", "chips", "innovation"]
 lang: "en"

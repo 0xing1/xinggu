@@ -61,7 +61,7 @@ export async function POST({ request, locals }) {
     const fileContent = `---
 title: "${title.replace(/"/g, '\\"')}"
 description: "${description.replace(/"/g, '\\"')}"
-pubDate: ${new Date().toISOString().split('T')[0]}
+pubDate: ${new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Shanghai' }).replace(' ', 'T')}:00+08:00
 ${category ? `category: "${category}"` : ''}
 tags: [${tagsArray.map(t => `"${t}"`).join(', ')}]
 lang: "${lang || 'zh'}"

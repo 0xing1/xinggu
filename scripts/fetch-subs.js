@@ -97,7 +97,7 @@ function generateMarkdown(results) {
   let md = `---
 title: "免费订阅 - V2Ray / Clash"
 description: "自动更新的 V2Ray 和 Clash 订阅链接，每小时同步一次。"
-pubDate: ${now.toISOString().split('T')[0]}
+pubDate: ${now.toLocaleString('sv-SE', { timeZone: 'Asia/Shanghai' }).replace(' ', 'T')}:00+08:00
 category: "订阅"
 tags: ["v2ray", "clash", "翻墙", "订阅", "免费"]
 lang: "zh"
