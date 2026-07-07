@@ -1,0 +1,47 @@
+[
+  {
+    "name": "sub",
+    "title": "免费订阅 - V2Ray / Clash",
+    "desc": "自动更新的 V2Ray 和 Clash 订阅链接。",
+    "repo": "hello-world-1989/cn-news",
+    "type": "github-files",
+    "files": [
+      { "name": "V2Ray", "path": "end-gfw-together", "desc": "基础 V2Ray 订阅" },
+      { "name": "Clash", "path": "clash.yaml", "desc": "Clash 订阅配置" }
+    ]
+  },
+  {
+    "name": "sub2",
+    "title": "免费订阅 - V2Ray 高速",
+    "desc": "高速 V2Ray 订阅（每3天更新）。",
+    "repo": "hello-world-1989/v2-sub",
+    "type": "github-files",
+    "files": [
+      { "name": "V2Ray 高速", "path": "end-gfw-together-af3e13", "desc": "高速 V2Ray 订阅" }
+    ]
+  },
+  {
+    "name": "tolink",
+    "title": "免费订阅 - Tolink",
+    "desc": "Tolink 免费 V2Ray / Clash 订阅链接。",
+    "repo": "tolinkshare2/tolinkshare2.github.io",
+    "type": "url",
+    "url": "https://9WX7V1.tosslk.xyz/df14bbf600aaf4bda6c7b65de228df74"
+  },
+  {
+    "name": "abshare",
+    "title": "免费订阅 - ABShare",
+    "desc": "ABShare 免费 V2Ray / Clash 订阅链接。",
+    "repo": "abshare3/abshare3.github.io",
+    "type": "url",
+    "url": "https://PHm75i.absslk.xyz/b2836928fabd17d44993211e933b5c5a"
+  },
+  {
+    "name": "toshare",
+    "title": "免费订阅 - ToShare",
+    "desc": "ToShare 免费 V2Ray / Clash 订阅链接。",
+    "repo": "toshare5/toshare5.github.io",
+    "type": "url",
+    "url": "https://7mA6os.tosslk.xyz/b6c3750c5f430956139a2d9925adfcaf"
+  }
+]

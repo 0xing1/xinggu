@@ -2,8 +2,8 @@ name: Fetch Subscriptions
 
 on:
   schedule:
-    # 每8小时运行一次，错开新闻任务30分钟 (UTC x:30 → 北京时间 x+8:30)
-    - cron: '30 */8 * * *'
+    # 每小时检查源仓库是否有更新，有更新才部署
+    - cron: '17 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -26,26 +26,16 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Fetch subscriptions
-        run: node scripts/fetch-subs.js
-
-      - name: Fetch tolink subscription
-        run: node scripts/fetch-tolink.js
-
-      - name: Fetch abshare subscription
-        run: node scripts/fetch-abshare.js
-
-      - name: Check for changes
-        id: changes
-        run: |
-          echo "has_changes=$(git status --porcelain src/content/blog/zh/sub/ src/content/blog/zh/tolink/ src/content/blog/zh/abshare/ | wc -l)" >> $GITHUB_OUTPUT
+      - name: Check repos and fetch if changed
+        id: fetch
+        run: node scripts/fetch-all-subs.js
 
       - name: Commit and push changes
-        if: steps.changes.outputs.has_changes != '0'
+        if: steps.fetch.outputs.changed == 'true'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add src/content/blog/zh/sub/ src/content/blog/zh/tolink/ src/content/blog/zh/abshare/
+          git add src/content/blog/zh/ scripts/.sub-state.json
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
@@ -54,13 +44,13 @@ jobs:
           fi
 
       - name: Build site
-        if: steps.changes.outputs.has_changes != '0'
+        if: steps.fetch.outputs.changed == 'true'
         run: npm run build
         env:
           NODE_ENV: production
 
       - name: Deploy to Cloudflare Pages
-        if: steps.changes.outputs.has_changes != '0'
+        if: steps.fetch.outputs.changed == 'true'
         uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

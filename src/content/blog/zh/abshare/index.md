@@ -1,15 +1,15 @@
 ---
 title: "免费订阅 - ABShare"
-description: "ABShare 免费 V2Ray / Clash 订阅链接，每8小时自动更新。"
+description: "ABShare 免费 V2Ray / Clash 订阅链接。每8小时自动更新。"
 pubDate: 2026-07-07
 category: "订阅"
-tags: ["v2ray", "clash", "翻墙", "订阅", "免费", "abshare"]
+tags: ["v2ray", "clash", "翻墙", "订阅", "免费"]
 lang: "zh"
 ---
 
-> 🕐 最近更新：2026/07/07 18:26
+> 🕐 最近更新：2026/07/07 18:32
 >
-> 本页内容每8小时自动同步自 [abshare3](https://github.com/abshare3/abshare3.github.io)
+> 本页内容自动同步自 [abshare3/abshare3.github.io](https://github.com/abshare3/abshare3.github.io)
 
 ---
 

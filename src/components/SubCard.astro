@@ -10,12 +10,14 @@ const t = {
   link1: lang === "zh" ? "免费订阅" : "Free Subs",
   link2: "Tolink",
   link3: "ABShare",
+  link4: "ToShare",
   desc: lang === "zh" ? "V2Ray / Clash" : "V2Ray / Clash",
 };
 
 const subPath = lang === "en" ? "/en/blog/sub" : "/blog/sub";
 const tolinkPath = lang === "en" ? "/en/blog/tolink" : "/blog/tolink";
 const absharePath = lang === "en" ? "/en/blog/abshare" : "/blog/abshare";
+const tosharePath = lang === "en" ? "/en/blog/toshare" : "/blog/toshare";
 ---
 
 <div class="sub-card">
@@ -25,6 +27,8 @@ const absharePath = lang === "en" ? "/en/blog/abshare" : "/blog/abshare";
   <a href={tolinkPath} class="sub-link">{t.link2}</a>
   <span class="sub-sep">|</span>
   <a href={absharePath} class="sub-link">{t.link3}</a>
+  <span class="sub-sep">|</span>
+  <a href={tosharePath} class="sub-link">{t.link4}</a>
   <span class="sub-desc">{t.desc}</span>
 </div>
 

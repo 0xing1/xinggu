@@ -26,7 +26,9 @@
       "Bash(node scripts/fetch-tolink.js)",
       "mcp__fetch__fetch_html",
       "Bash(curl -s \"https://api.github.com/repos/abshare3/abshare3.github.io/readme\")",
-      "Bash(node scripts/fetch-abshare.js)"
+      "Bash(node scripts/fetch-abshare.js)",
+      "Bash(curl -s \"https://api.github.com/repos/toshare5/toshare5.github.io/readme\")",
+      "Bash(node scripts/fetch-all-subs.js)"
     ],
     "additionalDirectories": [
       "D:\\VPN\\CloudflareIP"
