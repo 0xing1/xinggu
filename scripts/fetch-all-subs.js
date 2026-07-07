@@ -9,8 +9,8 @@ const SOURCES_PATH = path.join(process.cwd(), 'scripts', 'sub-sources.json');
 
 function httpsGet(url, headers = {}) {
   return new Promise((resolve, reject) => {
-    https
-      .get(url, { headers: { 'User-Agent': 'sub-crawler/1.0', ...headers } }, (res) => {
+    const req = https
+      .get(url, { headers: { 'User-Agent': 'sub-crawler/1.0', ...headers }, timeout: 10000 }, (res) => {
         if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
           return httpsGet(res.headers.location, headers).then(resolve, reject);
         }
@@ -20,7 +20,8 @@ function httpsGet(url, headers = {}) {
         res.on('end', () => resolve(Buffer.concat(chunks).toString()));
         res.on('error', reject);
       })
-      .on('error', reject);
+      .on('error', reject)
+      .on('timeout', () => { req.destroy(); reject(new Error('Request timeout 10s')); });
   });
 }
 
