@@ -37,10 +37,12 @@ const activeSocials = SOCIALS.filter(s => s.active);
 
 const searchUrl = new URL(lang === 'en' ? '/en/search' : '/search', Astro.site).href + '?q={search_term_string}';
 
-// Featured post (first one)
-const featuredPost = sortedPosts[0];
+// Exclude "订阅" category from featured/latest posts
+const visiblePosts = sortedPosts.filter(p => p.data.category !== '订阅');
+// Featured post (first visible one)
+const featuredPost = visiblePosts[0];
 // Remaining posts for the grid
-const remainingPosts = sortedPosts.slice(1);
+const remainingPosts = visiblePosts.slice(1);
 
 // Recent posts for sidebar
 const recentPostsForSidebar = sortedPosts.slice(0, 5).map(post => ({
