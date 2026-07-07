@@ -1,4 +1,4 @@
-name: Fetch Subscriptions
+name: Fetch V2Ray/Clash Subscriptions
 
 on:
   schedule:
@@ -26,18 +26,14 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
-      # 前两个源：每8小时定时抓取（内容没变则 git 无变化）
+      # V2Ray/Clash 订阅：每8小时定时抓取
       - name: Fetch V2Ray/Clash subscriptions
         run: node scripts/fetch-subs.js
-
-      # 后三个源：检查源仓库是否有新提交，有才抓取
-      - name: Check repos and fetch if changed
-        run: node scripts/fetch-all-subs.js
 
       - name: Check for changes
         id: changes
         run: |
-          count=$(git status --porcelain src/content/blog/zh/ scripts/.sub-state.json | wc -l)
+          count=$(git status --porcelain src/content/blog/zh/sub/ | wc -l)
           echo "has_changes=$count" >> $GITHUB_OUTPUT
 
       - name: Commit and push changes
@@ -45,11 +41,11 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add src/content/blog/zh/ scripts/.sub-state.json
+          git add src/content/blog/zh/sub/
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "🔄 Update subscriptions $(date +'%Y-%m-%d %H:%M')"
+            git commit -m "🔄 Update V2Ray/Clash subscriptions $(date +'%Y-%m-%d %H:%M')"
             git push
           fi
 
