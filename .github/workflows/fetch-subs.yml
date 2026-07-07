@@ -2,8 +2,8 @@ name: Fetch Subscriptions
 
 on:
   schedule:
-    # 每3小时检查一次
-    - cron: '17 */3 * * *'
+    # 每4小时检查一次（:35分）
+    - cron: '35 */4 * * *'
   workflow_dispatch:
 
 permissions:

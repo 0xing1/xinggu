@@ -1,6 +1,6 @@
 ---
 title: "免费订阅 - Allblue"
-description: "Allblue 蓝色海洋 免费 V2Ray / Clash 订阅链接。每3小时自动更新。"
+description: "Allblue 蓝色海洋 免费 V2Ray / Clash 订阅链接。每4小时自动更新。"
 pubDate: 2026-07-07
 category: "订阅"
 tags: ["v2ray", "clash", "翻墙", "订阅", "免费"]
