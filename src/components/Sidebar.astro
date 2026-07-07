@@ -3,6 +3,7 @@ import CategoryList from "./CategoryList.astro";
 import TagCloud from "./TagCloud.astro";
 import RecentPosts from "./RecentPosts.astro";
 import RssCard from "./RssCard.astro";
+import SubCard from "./SubCard.astro";
 
 export interface Props {
   categories: string[];
@@ -37,6 +38,8 @@ const { categories, postCounts, tags, recentPosts, lang = "zh", prefix = "" } = 
   )}
 
   <RssCard lang={lang} />
+
+  <SubCard lang={lang} />
 </aside>
 
 <style>

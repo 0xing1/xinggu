@@ -1,0 +1,52 @@
+---
+export interface Props {
+  lang?: "zh" | "en";
+}
+
+const { lang = "zh" } = Astro.props;
+
+const t = {
+  title: lang === "zh" ? "工具" : "Tools",
+  link: lang === "zh" ? "免费订阅节点" : "Free Subscriptions",
+  desc: lang === "zh" ? "V2Ray / Clash" : "V2Ray / Clash",
+};
+
+const subPath = lang === "en" ? "/en/blog/sub" : "/blog/sub";
+---
+
+<div class="sub-card">
+  <span class="sub-label">{t.title}</span>
+  <a href={subPath} class="sub-link">{t.link}</a>
+  <span class="sub-desc">{t.desc}</span>
+</div>
+
+<style>
+  .sub-card {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    border-top: 1px solid var(--color-border);
+    flex-wrap: wrap;
+  }
+
+  .sub-label {
+    opacity: 0.6;
+  }
+
+  .sub-link {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .sub-link:hover {
+    color: var(--color-primary);
+  }
+
+  .sub-desc {
+    opacity: 0.4;
+  }
+</style>
