@@ -2,7 +2,7 @@ name: Fetch Subscriptions
 
 on:
   schedule:
-    # 每小时检查源仓库是否有更新，有更新才部署
+    # 每小时检查一次
     - cron: '17 * * * *'
   workflow_dispatch:
 
@@ -26,12 +26,22 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
+      # 前两个源：每8小时定时抓取（内容没变则 git 无变化）
+      - name: Fetch V2Ray/Clash subscriptions
+        run: node scripts/fetch-subs.js
+
+      # 后三个源：检查源仓库是否有新提交，有才抓取
       - name: Check repos and fetch if changed
-        id: fetch
         run: node scripts/fetch-all-subs.js
 
+      - name: Check for changes
+        id: changes
+        run: |
+          count=$(git status --porcelain src/content/blog/zh/ scripts/.sub-state.json | wc -l)
+          echo "has_changes=$count" >> $GITHUB_OUTPUT
+
       - name: Commit and push changes
-        if: steps.fetch.outputs.changed == 'true'
+        if: steps.changes.outputs.has_changes != '0'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
@@ -44,13 +54,13 @@ jobs:
           fi
 
       - name: Build site
-        if: steps.fetch.outputs.changed == 'true'
+        if: steps.changes.outputs.has_changes != '0'
         run: npm run build
         env:
           NODE_ENV: production
 
       - name: Deploy to Cloudflare Pages
-        if: steps.fetch.outputs.changed == 'true'
+        if: steps.changes.outputs.has_changes != '0'
         uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
