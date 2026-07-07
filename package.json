@@ -6,13 +6,16 @@
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
-    "preview": "astro preview",
+    "preview": "npm run build && wrangler dev",
     "astro": "astro",
     "news": "node scripts/fetch-news.js",
     "news:daily": "node scripts/fetch-news.js --daily",
-    "postbuild": "npx pagefind --site dist"
+    "postbuild": "npx pagefind --site dist",
+    "generate-types": "wrangler types",
+    "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "^14.1.1",
     "@astrojs/mdx": "^4.0.0",
     "@astrojs/rss": "^4.0.0",
     "@astrojs/sitemap": "^3.0.0",
@@ -21,6 +24,10 @@
     "pagefind": "^1.5.2"
   },
   "devDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "wrangler": "^4.107.0"
+  },
+  "overrides": {
+    "vite": "^7"
   }
 }

@@ -2,8 +2,11 @@ import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 
+import cloudflare from '@astrojs/cloudflare';
+
 export default defineConfig({
   site: 'https://xinggu-blog.pages.dev',
+
   integrations: [
     mdx(),
     sitemap({
@@ -19,6 +22,7 @@ export default defineConfig({
       },
     }),
   ],
+
   i18n: {
     defaultLocale: 'zh',
     locales: ['zh', 'en'],
@@ -26,4 +30,6 @@ export default defineConfig({
       prefixDefaultLocale: false,
     },
   },
+
+  adapter: cloudflare(),
 });

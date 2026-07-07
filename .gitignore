@@ -42,3 +42,6 @@ NEWS-FEATURE.md
 # Logs
 *.log
 npm-debug.log*
+
+.dev.vars*
+!.dev.vars.example
