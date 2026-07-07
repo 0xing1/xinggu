@@ -1,0 +1,63 @@
+name: Fetch Subscriptions
+
+on:
+  schedule:
+    # 每4小时运行一次，错开新闻任务30分钟 (UTC x:30 → 北京时间 x+8:30)
+    - cron: '30 */4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-subs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Fetch subscriptions
+        run: node scripts/fetch-subs.js
+
+      - name: Check for changes
+        id: changes
+        run: |
+          echo "has_changes=$(git status --porcelain src/content/blog/zh/sub/ | wc -l)" >> $GITHUB_OUTPUT
+
+      - name: Commit and push changes
+        if: steps.changes.outputs.has_changes != '0'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add src/content/blog/zh/sub/
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "🔄 Update subscriptions $(date +'%Y-%m-%d %H:%M')"
+            git push
+          fi
+
+      - name: Build site
+        if: steps.changes.outputs.has_changes != '0'
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Deploy to Cloudflare Pages
+        if: steps.changes.outputs.has_changes != '0'
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: xinggu-blog
+          directory: dist
