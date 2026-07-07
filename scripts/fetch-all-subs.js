@@ -93,7 +93,7 @@ function genGitHubPost(src, results) {
   const { date, time, isoDate } = makeDateStr();
   let md = `---
 title: "${src.title}"
-description: "${src.desc}每4小时自动更新。"
+description: "${src.desc}每小时自动更新。"
 pubDate: ${isoDate}
 category: "订阅"
 tags: ["v2ray", "clash", "翻墙", "订阅", "免费"]
@@ -132,7 +132,7 @@ function genUrlPost(src, nodeContent) {
   const { date, time, isoDate } = makeDateStr();
   return `---
 title: "${src.title}"
-description: "${src.desc}每4小时自动更新。"
+description: "${src.desc}每小时自动更新。"
 pubDate: ${isoDate}
 category: "订阅"
 tags: ["v2ray", "clash", "翻墙", "订阅", "免费"]
