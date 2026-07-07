@@ -9,11 +9,13 @@ const t = {
   title: lang === "zh" ? "工具" : "Tools",
   link1: lang === "zh" ? "免费订阅" : "Free Subs",
   link2: "Tolink",
+  link3: "ABShare",
   desc: lang === "zh" ? "V2Ray / Clash" : "V2Ray / Clash",
 };
 
 const subPath = lang === "en" ? "/en/blog/sub" : "/blog/sub";
 const tolinkPath = lang === "en" ? "/en/blog/tolink" : "/blog/tolink";
+const absharePath = lang === "en" ? "/en/blog/abshare" : "/blog/abshare";
 ---
 
 <div class="sub-card">
@@ -21,6 +23,8 @@ const tolinkPath = lang === "en" ? "/en/blog/tolink" : "/blog/tolink";
   <a href={subPath} class="sub-link">{t.link1}</a>
   <span class="sub-sep">|</span>
   <a href={tolinkPath} class="sub-link">{t.link2}</a>
+  <span class="sub-sep">|</span>
+  <a href={absharePath} class="sub-link">{t.link3}</a>
   <span class="sub-desc">{t.desc}</span>
 </div>
 

@@ -32,17 +32,20 @@ jobs:
       - name: Fetch tolink subscription
         run: node scripts/fetch-tolink.js
 
+      - name: Fetch abshare subscription
+        run: node scripts/fetch-abshare.js
+
       - name: Check for changes
         id: changes
         run: |
-          echo "has_changes=$(git status --porcelain src/content/blog/zh/sub/ src/content/blog/zh/tolink/ | wc -l)" >> $GITHUB_OUTPUT
+          echo "has_changes=$(git status --porcelain src/content/blog/zh/sub/ src/content/blog/zh/tolink/ src/content/blog/zh/abshare/ | wc -l)" >> $GITHUB_OUTPUT
 
       - name: Commit and push changes
         if: steps.changes.outputs.has_changes != '0'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add src/content/blog/zh/sub/ src/content/blog/zh/tolink/
+          git add src/content/blog/zh/sub/ src/content/blog/zh/tolink/ src/content/blog/zh/abshare/
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
