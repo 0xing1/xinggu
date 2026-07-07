@@ -6,7 +6,27 @@
       "Bash(gh *)",
       "Bash(npx wrangler *)",
       "Bash(export CLOUDFLARE_API_TOKEN=*)",
-      "Bash(export CLOUDFLARE_ACCOUNT_ID=*)"
+      "Bash(export CLOUDFLARE_ACCOUNT_ID=*)",
+      "Bash(curl -s \"https://api.github.com/repos/0xing1/xinggu/actions/runs?per_page=5\")",
+      "Bash(node -e \"const d=JSON.parse\\(require\\('fs'\\).readFileSync\\(0,'utf8'\\)\\); d.workflow_runs.forEach\\(r=>console.log\\(r.status, r.conclusion, r.created_at, r.name\\)\\)\")",
+      "Bash(node -e \"const d=JSON.parse\\(require\\('fs'\\).readFileSync\\(0,'utf8'\\)\\); d.workflow_runs.forEach\\(r=>console.log\\(r.status, r.conclusion, r.created_at, r.name, r.html_url\\)\\)\")",
+      "Bash(curl -s \"https://api.github.com/repos/0xing1/xinggu/actions/runs/28846402924/jobs\")",
+      "Bash(node -e \"const d=JSON.parse\\(require\\('fs'\\).readFileSync\\(0,'utf8'\\)\\); d.jobs.forEach\\(j=>{console.log\\(j.name, j.conclusion\\); j.steps.forEach\\(s=>console.log\\('  ', s.name, s.conclusion\\)\\)}\\)\")",
+      "Bash(curl -s \"https://xinggu-blog.pages.dev/\")",
+      "Bash(git stash *)",
+      "Bash(curl -s \"https://api.github.com/repos/clash-verge-rev/clash-verge-rev/releases/tags/v2.5.1\")",
+      "Bash(node -e \"const d=require\\('fs'\\).readFileSync\\(0,'utf8'\\);const r=JSON.parse\\(d\\);\\(r.assets||[]\\).forEach\\(a=>console.log\\(a.name, '\\('+\\(a.size/1024/1024\\).toFixed\\(1\\)+'MB\\)'\\)\\)\")",
+      "Bash(rm -rf \"D:/VPN/CloudflareIP/\")",
+      "Bash(curl -s \"https://api.github.com/repos/tolinkshare2/tolinkshare2.github.io\")",
+      "Bash(node -e \"const d=require\\('fs'\\).readFileSync\\(0,'utf8'\\);const r=JSON.parse\\(d\\);console.log\\('Name:', r.name\\);console.log\\('Description:', r.description\\);console.log\\('Language:', r.language\\);console.log\\('Default branch:', r.default_branch\\)\")",
+      "Bash(curl -s \"https://api.github.com/repos/tolinkshare2/tolinkshare2.github.io/contents/\")",
+      "Bash(node -e \"const d=require\\('fs'\\).readFileSync\\(0,'utf8'\\);JSON.parse\\(d\\).forEach\\(f=>console.log\\(f.name\\)\\)\")",
+      "Bash(curl -s \"https://api.github.com/repos/tolinkshare2/tolinkshare2.github.io/readme\")",
+      "Bash(node -e \"const d=require\\('fs'\\).readFileSync\\(0,'utf8'\\);const r=JSON.parse\\(d\\);console.log\\(Buffer.from\\(r.content,'base64'\\).toString\\('utf8'\\)\\)\")",
+      "Bash(node scripts/fetch-tolink.js)"
+    ],
+    "additionalDirectories": [
+      "D:\\VPN\\CloudflareIP"
     ]
   }
 }

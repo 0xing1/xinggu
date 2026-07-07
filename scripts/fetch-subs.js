@@ -96,7 +96,7 @@ function generateMarkdown(results) {
 
   let md = `---
 title: "免费订阅 - V2Ray / Clash"
-description: "自动更新的 V2Ray 和 Clash 订阅链接，每4小时同步一次。"
+description: "自动更新的 V2Ray 和 Clash 订阅链接，每8小时同步一次。"
 pubDate: ${now.toISOString().split('T')[0]}
 category: "订阅"
 tags: ["v2ray", "clash", "翻墙", "订阅", "免费"]
@@ -105,7 +105,7 @@ lang: "zh"
 
 > 🕐 最近更新：${dateStr} ${timeStr}
 >
-> 本页内容每4小时自动同步自 [hello-world-1989/cn-news](https://github.com/hello-world-1989/cn-news)
+> 本页内容每8小时自动同步自 [hello-world-1989/cn-news](https://github.com/hello-world-1989/cn-news)
 
 ---
 

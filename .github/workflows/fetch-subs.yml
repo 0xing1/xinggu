@@ -2,8 +2,8 @@ name: Fetch Subscriptions
 
 on:
   schedule:
-    # 每4小时运行一次，错开新闻任务30分钟 (UTC x:30 → 北京时间 x+8:30)
-    - cron: '30 */4 * * *'
+    # 每8小时运行一次，错开新闻任务30分钟 (UTC x:30 → 北京时间 x+8:30)
+    - cron: '30 */8 * * *'
   workflow_dispatch:
 
 permissions:
@@ -29,17 +29,20 @@ jobs:
       - name: Fetch subscriptions
         run: node scripts/fetch-subs.js
 
+      - name: Fetch tolink subscription
+        run: node scripts/fetch-tolink.js
+
       - name: Check for changes
         id: changes
         run: |
-          echo "has_changes=$(git status --porcelain src/content/blog/zh/sub/ | wc -l)" >> $GITHUB_OUTPUT
+          echo "has_changes=$(git status --porcelain src/content/blog/zh/sub/ src/content/blog/zh/tolink/ | wc -l)" >> $GITHUB_OUTPUT
 
       - name: Commit and push changes
         if: steps.changes.outputs.has_changes != '0'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add src/content/blog/zh/sub/
+          git add src/content/blog/zh/sub/ src/content/blog/zh/tolink/
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
