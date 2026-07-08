@@ -42,3 +42,9 @@ NEWS-FEATURE.md
 # Logs
 *.log
 npm-debug.log*
+
+# Claude Code
+.claude/settings.json
+
+# License (optional)
+# LICENSE
