@@ -1,16 +1,10 @@
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
-import cloudflare from '@astrojs/cloudflare';
 
 export default defineConfig({
   site: 'https://xinggu-blog.pages.dev',
   output: 'static',
-  adapter: cloudflare({
-    routes: {
-      exclude: ['/api/*'],
-    },
-  }),
   integrations: [
     mdx(),
     sitemap({
