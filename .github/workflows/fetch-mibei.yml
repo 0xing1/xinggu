@@ -2,8 +2,8 @@ name: Fetch Mibei Daily Nodes
 
 on:
   schedule:
-    # 每天凌晨 17:00 UTC (北京时间 01:00) 运行
-    - cron: '0 17 * * *'
+    # 每天 03:30 UTC (北京时间 11:30) 运行
+    - cron: '30 3 * * *'
   workflow_dispatch:
 
 permissions:
@@ -40,6 +40,7 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
+          git pull --rebase --autostash
           git add src/content/blog/zh/mibei/
           if git diff --cached --quiet; then
             echo "No changes to commit"
