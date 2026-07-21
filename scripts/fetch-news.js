@@ -1,17 +1,32 @@
 import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import https from 'https';
+import RssParser from 'rss-parser';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// 日期格式化
+const rssParser = new RssParser({
+  timeout: 15000,
+  headers: {
+    'User-Agent': 'Mozilla/5.0 (compatible; astro-blog-rss-reader/1.0)',
+    'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+  },
+  // 自定义字段：支持 media:content
+  customFields: {
+    item: [
+      ['media:content', 'mediaContent'],
+      ['media:thumbnail', 'mediaThumbnail'],
+    ],
+  },
+});
+
+// ---------- 日期格式化 ----------
+
 function formatDate(date) {
   return date.toISOString().split('T')[0];
 }
 
-// 日期时间格式化（用于pubDate，北京时间）
 function formatDateTime(date) {
   return date.toLocaleString('sv-SE', { timeZone: 'Asia/Shanghai' }).replace(' ', 'T') + '+08:00';
 }
@@ -23,30 +38,8 @@ function formatDateChinese(date) {
   return `${year}年${month}月${day}日`;
 }
 
-// HTTP 请求封装
-function httpsGet(url, timeout = 10000) {
-  return new Promise((resolve, reject) => {
-    const req = https.get(url, { timeout }, (res) => {
-      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        httpsGet(res.headers.location, timeout).then(resolve).catch(reject);
-        return;
-      }
-      let data = '';
-      res.on('data', (chunk) => data += chunk);
-      res.on('end', () => {
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          resolve(data);
-        } else {
-          reject(new Error(`HTTP ${res.statusCode}: ${url}`));
-        }
-      });
-    });
-    req.on('error', reject);
-    req.on('timeout', () => { req.destroy(); reject(new Error(`Timeout: ${url}`)); });
-  });
-}
+// ---------- RSS 源配置 ----------
 
-// RSS 源列表
 const RSS_FEEDS = [
   // 中文源
   { name: '36氪', url: 'https://36kr.com/feed', lang: 'zh', category: 'tech' },
@@ -61,65 +54,92 @@ const RSS_FEEDS = [
   { name: 'MIT Tech Review', url: 'https://www.technologyreview.com/feed/', lang: 'en', category: 'tech' },
 ];
 
-// 解析 RSS XML
-function parseRSS(xml) {
-  const items = [];
-  const itemRegex = /<item>([\s\S]*?)<\/item>/g;
-  let match;
-  while ((match = itemRegex.exec(xml)) !== null) {
-    const itemXml = match[1];
-    const title = extractTag(itemXml, 'title');
-    const link = extractTag(itemXml, 'link');
-    const description = extractTag(itemXml, 'description');
-    const pubDate = extractTag(itemXml, 'pubDate');
-    // 提取图片：从 media:content、media:thumbnail、enclosure 或 description 中的 img
-    const image = extractImage(itemXml, description);
-    if (title && link) {
-      items.push({
-        title: cleanHtml(title).substring(0, 100),
-        link: link.trim(),
-        description: cleanHtml(description || '').substring(0, 200),
-        pubDate: pubDate || '',
-        image: image || ''
-      });
+// ---------- 新闻抓取 ----------
+
+/**
+ * 从单个 RSS 源获取条目
+ */
+async function fetchFeed(feed) {
+  try {
+    const parsed = await rssParser.parseURL(feed.url);
+
+    if (!parsed.items || parsed.items.length === 0) {
+      console.log(`  ⚠️ ${feed.name}: 空结果`);
+      return [];
+    }
+
+    const items = parsed.items.slice(0, 10).map((item) => {
+      // 提取图片：media:content > media:thumbnail > enclosure > description img
+      const image = extractImage(item);
+
+      // 清理描述文本
+      const desc = cleanHtml(
+        (item.contentSnippet || item.content || item.summary || '').substring(0, 300)
+      );
+
+      return {
+        title: cleanHtml(item.title || '').substring(0, 100),
+        link: item.link?.trim() || '',
+        description: desc,
+        pubDate: item.pubDate || item.isoDate || '',
+        image,
+        source: feed.name,
+        lang: feed.lang,
+        category: feed.category,
+      };
+    });
+
+    console.log(`  ✅ ${feed.name}: ${items.length} 条`);
+    return items;
+  } catch (e) {
+    console.error(`  ❌ ${feed.name}: ${e.message}`);
+    return [];
+  }
+}
+
+/**
+ * 从 RSS 条目中提取图片 URL
+ */
+function extractImage(item) {
+  // media:content（自定义字段）
+  if (item.mediaContent) {
+    const mc = item.mediaContent;
+    if (typeof mc === 'object' && mc.$) return mc.$.url;
+    if (typeof mc === 'string') {
+      // 可能是 JSON 字符串
+      try {
+        const parsed = JSON.parse(mc);
+        if (parsed.$?.url) return parsed.$.url;
+      } catch {}
+      const match = mc.match(/url="([^"]+)"/);
+      if (match) return match[1];
     }
   }
-  return items;
-}
 
-// 提取 XML 标签内容
-function extractTag(xml, tag) {
-  // 处理 CDATA
-  const cdataRegex = new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]></${tag}>`, 'i');
-  const cdataMatch = xml.match(cdataRegex);
-  if (cdataMatch) return cdataMatch[1].trim();
-  
-  // 普通标签
-  const regex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, 'i');
-  const match = xml.match(regex);
-  return match ? match[1].trim() : null;
-}
+  // media:thumbnail
+  if (item.mediaThumbnail) {
+    const mt = item.mediaThumbnail;
+    if (typeof mt === 'object' && mt.$) return mt.$.url;
+  }
 
-// 提取图片
-function extractImage(itemXml, description) {
-  // media:content 或 media:thumbnail
-  const mediaMatch = itemXml.match(/<(media:content|media:thumbnail)[^>]*url="([^"]+)"/i);
-  if (mediaMatch) return mediaMatch[2];
-  
   // enclosure
-  const enclosureMatch = itemXml.match(/<enclosure[^>]*url="([^"]+)"[^>]*type="image/i);
-  if (enclosureMatch) return enclosureMatch[1];
-  
-  // 从 description 中提取 img
-  if (description) {
-    const imgMatch = description.match(/<img[^>]*src="([^"]+)"/i);
+  if (item.enclosure?.url && /image/i.test(item.enclosure.type || '')) {
+    return item.enclosure.url;
+  }
+
+  // description 中的 img 标签
+  const content = item.content || item['content:encoded'] || item.summary || '';
+  if (content) {
+    const imgMatch = content.match(/<img[^>]*src="([^"]+)"/i);
     if (imgMatch) return imgMatch[1];
   }
-  
-  return null;
+
+  return '';
 }
 
-// 清理 HTML
+/**
+ * 清理 HTML 标签和实体
+ */
 function cleanHtml(html) {
   return html
     .replace(/<[^>]+>/g, '')
@@ -129,90 +149,85 @@ function cleanHtml(html) {
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
+    .replace(/&ldquo;/g, '"')
+    .replace(/&rdquo;/g, '"')
+    .replace(/&mdash;/g, '—')
+    .replace(/&ndash;/g, '–')
     .replace(/\s+/g, ' ')
     .trim();
 }
 
-// 获取新闻
-async function fetchNews() {
-  const allItems = [];
-  
-  for (const feed of RSS_FEEDS) {
-    try {
-      console.log(`Fetching ${feed.name}...`);
-      const xml = await httpsGet(feed.url);
-      const items = parseRSS(xml);
-      const taggedItems = items.map(item => ({
-        ...item,
-        source: feed.name,
-        lang: feed.lang,
-        category: feed.category
-      }));
-      allItems.push(...taggedItems.slice(0, 10)); // 每个源最多10条
-      console.log(`  Got ${Math.min(items.length, 10)} items from ${feed.name}`);
-    } catch (error) {
-      console.error(`  Error fetching ${feed.name}: ${error.message}`);
-    }
-  }
-  
-  return allItems;
+/**
+ * 并发抓取所有 RSS 源
+ */
+async function fetchAllFeeds() {
+  const results = await Promise.all(RSS_FEEDS.map((feed) => fetchFeed(feed)));
+  return results.flat();
 }
 
-// 评分和筛选新闻
+// ---------- 评分与筛选 ----------
+
 function scoreAndSelect(items) {
   const now = Date.now();
   const oneDayAgo = now - 24 * 60 * 60 * 1000;
-  
+
   const scored = items
-    .filter(item => {
-      // 过滤超过24小时的新闻
+    .filter((item) => {
       if (item.pubDate) {
         const pubTime = new Date(item.pubDate).getTime();
+        if (isNaN(pubTime)) return true; // 无法解析日期则保留
         if (pubTime < oneDayAgo) return false;
       }
       return true;
     })
-    .map(item => {
+    .map((item) => {
       let score = 0;
-      
-      // 标题关键词评分
-      const title = item.title.toLowerCase();
-      const desc = item.description.toLowerCase();
-      
-      // AI 相关
-      if (/ai|人工智能|gpt|llm|大模型|机器学习|深度学习|neural|openai|google ai|anthropic/i.test(title + desc)) score += 3;
-      
-      // 芯片/硬件
-      if (/芯片|半导体|chip|nvidia|amd|intel|quantum|量子/i.test(title + desc)) score += 2;
-      
-      // 新能源/气候
-      if (/新能源|电池|solar|climate|碳|hydrogen|氢能|ev|电动车/i.test(title + desc)) score += 2;
-      
+      const combined = `${item.title} ${item.description}`.toLowerCase();
+
+      // AI / 大模型
+      if (/ai|人工智能|gpt|llm|大模型|机器学习|深度学习|neural|openai|google ai|anthropic|model|agent/i.test(combined)) score += 3;
+
+      // 芯片 / 硬件
+      if (/芯片|半导体|chip|nvidia|amd|intel|quantum|量子|gpu|tpu|processor/i.test(combined)) score += 2;
+
+      // 新能源 / 气候
+      if (/新能源|电池|solar|climate|碳|hydrogen|氢能|ev|电动车|battery|energy/i.test(combined)) score += 2;
+
       // 生物科技
-      if (/biotech|基因|crispr|drug|药|医疗/i.test(title + desc)) score += 1;
-      
-      // 太空/航天
-      if (/space|spacex|nasa|火箭|卫星|航天/i.test(title + desc)) score += 1;
-      
-      // 创新/创业
-      if (/startup|融资|估值|launch|发布|release/i.test(title + desc)) score += 1;
-      
+      if (/biotech|基因|crispr|drug|药|医疗|biology|dna|protein/i.test(combined)) score += 1;
+
+      // 太空 / 航天
+      if (/space|spacex|nasa|火箭|卫星|航天|rocket|satellite|mars/i.test(combined)) score += 1;
+
+      // 创新 / 创业 / 融资
+      if (/startup|融资|估值|launch|发布|release|funding|acquisition|ipo/i.test(combined)) score += 1;
+
       return { ...item, score };
     })
     .sort((a, b) => b.score - a.score);
-  
-  // 取前3-5条
-  const count = Math.min(5, Math.max(3, scored.length));
-  return scored.slice(0, count);
+
+  // 去重：相同标题只保留一条
+  const seen = new Set();
+  const deduped = [];
+  for (const item of scored) {
+    const key = item.title.toLowerCase().substring(0, 60);
+    if (!seen.has(key)) {
+      seen.add(key);
+      deduped.push(item);
+    }
+  }
+
+  const count = Math.min(5, Math.max(3, deduped.length));
+  return deduped.slice(0, count);
 }
 
-// 生成新闻文章
+// ---------- 生成文章 ----------
+
 function generateNewsArticle(date, newsItems) {
-  const dateStr = formatDate(date);
   const dateChinese = formatDateChinese(date);
   const weekday = ['日', '一', '二', '三', '四', '五', '六'][date.getDay()];
 
-  const content = `---
+  return `---
 title: "前沿科技速递 - ${dateChinese}"
 description: "${dateChinese}（星期${weekday}）最新前沿科技新闻，涵盖 AI、芯片、量子计算、新能源等领域。"
 pubDate: ${formatDateTime(date)}
@@ -224,7 +239,7 @@ ${newsItems[0]?.image ? `heroImage: "${newsItems[0].image}"` : ''}
 
 ## 🚀 ${dateChinese} 前沿科技速递
 
-> 每日精选 3-5 条最新前沿科技动态，把握科技脉搏。
+> 每日精选 ${newsItems.length} 条最新前沿科技动态，把握科技脉搏。
 
 ---
 
@@ -241,13 +256,9 @@ ${news.description}
 
 *数据来源：36氪、Solidot、少数派、Hacker News、TechCrunch、The Verge、Ars Technica、Wired、MIT Tech Review*
 `;
-
-  return content;
 }
 
-// 生成英文文章
 function generateEnglishNewsArticle(date, newsItems) {
-  const dateStr = formatDate(date);
   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   const dateEnglish = date.toLocaleDateString('en-US', options);
 
@@ -263,7 +274,7 @@ ${newsItems[0]?.image ? `heroImage: "${newsItems[0].image}"` : ''}
 
 ## 🚀 ${dateEnglish} Tech Frontier Digest
 
-> Daily curated 3-5 latest cutting-edge technology news to stay ahead.
+> Daily curated ${newsItems.length} latest cutting-edge technology news to stay ahead.
 
 ---
 
@@ -282,39 +293,46 @@ ${news.description}
 `;
 }
 
-// 主函数
+// ---------- Main ----------
+
 async function main() {
-  console.log('Fetching daily news...');
-  
-  const allNews = await fetchNews();
-  console.log(`Total news items: ${allNews.length}`);
-  
+  console.log('📡 开始抓取每日科技新闻...\n');
+
+  // 1. 并发抓取所有 RSS 源
+  const allNews = await fetchAllFeeds();
+  console.log(`\n📊 共获取 ${allNews.length} 条新闻\n`);
+
   if (allNews.length === 0) {
-    console.log('No news fetched, exiting...');
+    console.log('❌ 未获取到任何新闻，退出');
     return;
   }
-  
+
+  // 2. 评分筛选
   const selectedNews = scoreAndSelect(allNews);
-  console.log(`Selected ${selectedNews.length} news items`);
-  
+  console.log(`🎯 精选 ${selectedNews.length} 条新闻:\n`);
+  selectedNews.forEach((n, i) => {
+    console.log(`  ${i + 1}. [${n.source}] ${n.title} (评分: ${n.score})`);
+  });
+
+  // 3. 生成文章
   const date = new Date();
   const dateStr = formatDate(date);
-  
-  // 生成中文文章
+
+  // 中文文章
   const zhArticle = generateNewsArticle(date, selectedNews);
   const zhDir = join(__dirname, '../src/content/blog/zh/news');
   if (!existsSync(zhDir)) mkdirSync(zhDir, { recursive: true });
   writeFileSync(join(zhDir, `tech-news-${dateStr}.md`), zhArticle);
-  console.log(`Created zh/tech-news-${dateStr}.md`);
-  
-  // 生成英文文章
+  console.log(`\n✅ 已创建 zh/tech-news-${dateStr}.md`);
+
+  // 英文文章
   const enArticle = generateEnglishNewsArticle(date, selectedNews);
   const enDir = join(__dirname, '../src/content/blog/en/tech');
   if (!existsSync(enDir)) mkdirSync(enDir, { recursive: true });
   writeFileSync(join(enDir, `tech-news-${dateStr}.md`), enArticle);
-  console.log(`Created en/tech-news-${dateStr}.md`);
-  
-  console.log('Done!');
+  console.log(`✅ 已创建 en/tech-news-${dateStr}.md`);
+
+  console.log('\n🎉 完成！');
 }
 
 main().catch(console.error);

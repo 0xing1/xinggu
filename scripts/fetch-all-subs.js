@@ -1,70 +1,63 @@
 import fs from 'fs';
 import path from 'path';
-import https from 'https';
 
 const STATE_PATH = path.join(process.cwd(), 'scripts', '.sub-state.json');
 const SOURCES_PATH = path.join(process.cwd(), 'scripts', 'sub-sources.json');
 
-// ---------- HTTP helpers ----------
+// ---------- HTTP 请求 ----------
 
-function httpsGet(url, headers = {}) {
-  return new Promise((resolve, reject) => {
-    const req = https
-      .get(url, { headers: { 'User-Agent': 'sub-crawler/1.0', ...headers }, timeout: 10000 }, (res) => {
-        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-          return httpsGet(res.headers.location, headers).then(resolve, reject);
-        }
-        if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode}`));
-        const chunks = [];
-        res.on('data', (c) => chunks.push(c));
-        res.on('end', () => resolve(Buffer.concat(chunks).toString()));
-        res.on('error', reject);
-      })
-      .on('error', reject)
-      .on('timeout', () => { req.destroy(); reject(new Error('Request timeout 10s')); });
-  });
-}
-
-async function retry(fn, retries = 3) {
+async function httpGet(url, headers = {}, retries = 3) {
   for (let i = 0; i < retries; i++) {
-    try { return await fn(); } catch (e) {
+    try {
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': 'sub-crawler/1.0',
+          ...headers,
+        },
+        signal: AbortSignal.timeout(15000),
+      });
+
+      if (res.status >= 300 && res.status < 400 && res.headers.get('location')) {
+        return await httpGet(res.headers.get('location'), headers, retries);
+      }
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      return await res.text();
+    } catch (e) {
       if (i === retries - 1) throw e;
+      console.log(`    ⚠️ 重试 ${i + 1}/${retries}: ${e.message}`);
       await new Promise((r) => setTimeout(r, 2000 * (i + 1)));
     }
   }
 }
 
-// ---------- Repo commit check ----------
+// ---------- GitHub API ----------
 
 async function getLatestCommit(repo) {
-  const body = await retry(() =>
-    httpsGet(`https://api.github.com/repos/${repo}/commits?per_page=1`, {
-      Accept: 'application/vnd.github.v3+json',
-    })
-  );
+  const body = await httpGet(`https://api.github.com/repos/${repo}/commits?per_page=1`, {
+    Accept: 'application/vnd.github.v3+json',
+  });
   const arr = JSON.parse(body);
   return arr[0]?.sha || null;
 }
 
-// ---------- Content fetchers ----------
-
 async function fetchGitHubFile(repo, filePath) {
-  const body = await retry(() =>
-    httpsGet(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
-      Accept: 'application/vnd.github.v3+json',
-    })
-  );
+  const body = await httpGet(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+    Accept: 'application/vnd.github.v3+json',
+  });
   const json = JSON.parse(body);
   if (json.content) return Buffer.from(json.content, 'base64').toString('utf-8');
-  if (json.download_url) return await retry(() => httpsGet(json.download_url));
+  if (json.download_url) return await httpGet(json.download_url);
   throw new Error('无法获取内容');
 }
 
 async function fetchUrl(url) {
-  return await retry(() => httpsGet(url));
+  return await httpGet(url);
 }
 
-// 从上游README中提取最新的订阅链接
+// ---------- 上游链接提取 ----------
+
 async function extractLatestSubUrl(repo) {
   const readme = await fetchGitHubFile(repo, 'README.md');
   // 匹配 "免费Clash订阅链接" 后面代码块中的URL
@@ -72,14 +65,18 @@ async function extractLatestSubUrl(repo) {
   return match ? match[1].trim() : null;
 }
 
+// ---------- Base64 解码 ----------
+
 function decodeBase64(str) {
   try {
     const d = Buffer.from(str.trim(), 'base64').toString('utf-8');
-    return (d.includes('vmess://') || d.includes('vless://') || d.includes('trojan://')) ? d : str;
-  } catch { return str; }
+    return d.includes('vmess://') || d.includes('vless://') || d.includes('trojan://') ? d : str;
+  } catch {
+    return str;
+  }
 }
 
-// ---------- Markdown generators ----------
+// ---------- Markdown 生成 ----------
 
 function makeDateStr() {
   const now = new Date();
@@ -110,7 +107,10 @@ lang: "zh"
 `;
 
   for (const r of results) {
-    if (!r.success) { md += `## ❌ ${r.name}\n\n获取失败: ${r.error}\n\n---\n\n`; continue; }
+    if (!r.success) {
+      md += `## ❌ ${r.name}\n\n获取失败: ${r.error}\n\n---\n\n`;
+      continue;
+    }
     md += `## ${r.name}\n\n> ${r.desc}\n\n`;
     if (r.name === 'Clash') {
       md += `**订阅链接（复制到 Clash 客户端）：**\n\n`;
@@ -181,10 +181,14 @@ ${nodeContent.trim()}
 async function main() {
   const sources = JSON.parse(fs.readFileSync(SOURCES_PATH, 'utf-8'));
 
-  // Load state
+  // 加载状态
   let state = {};
   if (fs.existsSync(STATE_PATH)) {
-    try { state = JSON.parse(fs.readFileSync(STATE_PATH, 'utf-8')); } catch {}
+    try {
+      state = JSON.parse(fs.readFileSync(STATE_PATH, 'utf-8'));
+    } catch {
+      // 状态文件损坏则重置
+    }
   }
 
   let anyChanged = false;
@@ -192,7 +196,7 @@ async function main() {
   for (const src of sources) {
     console.log(`\n🔍 检查 ${src.name} (${src.repo})...`);
 
-    // Check latest commit
+    // 检查最新提交
     let latestSha;
     try {
       latestSha = await getLatestCommit(src.repo);
@@ -227,7 +231,7 @@ async function main() {
       markdown = genGitHubPost(src, results);
     } else {
       try {
-        // 先从上游README提取最新订阅链接
+        // 从上游 README 提取最新订阅链接
         let latestUrl = src.url;
         try {
           const extracted = await extractLatestSubUrl(src.repo);
@@ -235,19 +239,18 @@ async function main() {
             latestUrl = extracted;
             console.log(`    🔗 从上游提取到最新链接: ${latestUrl.substring(0, 50)}...`);
           } else {
-            console.log(`    ⚠️ 未从上游提取到链接，使用config中的链接`);
+            console.log(`    ⚠️ 未从上游提取到链接，使用 config 中的链接`);
           }
         } catch (e) {
-          console.log(`    ⚠️ 提取上游链接失败: ${e.message}，使用config中的链接`);
+          console.log(`    ⚠️ 提取上游链接失败: ${e.message}，使用 config 中的链接`);
         }
 
         const raw = await fetchUrl(latestUrl);
         const content = decodeBase64(raw);
-        // 用最新URL生成文章
         markdown = genUrlPost({ ...src, url: latestUrl }, content);
         console.log(`    ✅ 获取成功`);
 
-        // 如果URL变了，更新config文件
+        // URL 变了则更新配置
         if (latestUrl !== src.url) {
           src.url = latestUrl;
           fs.writeFileSync(SOURCES_PATH, JSON.stringify(sources, null, 2) + '\n', 'utf-8');
@@ -259,22 +262,21 @@ async function main() {
       }
     }
 
-    // Write blog post
+    // 写入博客文件
     const outPath = path.join(process.cwd(), 'src', 'content', 'blog', 'zh', src.name, 'index.md');
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
     fs.writeFileSync(outPath, markdown, 'utf-8');
     console.log(`  📝 已写入 ${src.name}/index.md`);
 
-    // Update state
+    // 更新状态
     state[src.name] = latestSha;
   }
 
-  // Save state
+  // 保存状态
   fs.writeFileSync(STATE_PATH, JSON.stringify(state, null, 2) + '\n', 'utf-8');
 
   if (!anyChanged) {
     console.log('\n✅ 所有源均无更新，无需部署。');
-    // Set output for GitHub Actions
     if (process.env.GITHUB_OUTPUT) {
       fs.appendFileSync(process.env.GITHUB_OUTPUT, 'changed=false\n');
     }

@@ -1,30 +1,44 @@
 import fs from 'fs';
 import path from 'path';
-import https from 'https';
+import * as cheerio from 'cheerio';
 
-// ---------- HTTP helpers ----------
+// ---------- 配置 ----------
+const BASE_URL = 'https://www.mibei77.com';
+const USER_AGENTS = [
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15',
+  'Mozilla/5.0 (X11; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0',
+];
 
-function httpsGet(url, headers = {}) {
-  return new Promise((resolve, reject) => {
-    https
-      .get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36', ...headers } }, (res) => {
-        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-          return httpsGet(res.headers.location, headers).then(resolve, reject);
-        }
-        if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode}`));
-        const chunks = [];
-        res.on('data', (c) => chunks.push(c));
-        res.on('end', () => resolve(Buffer.concat(chunks).toString()));
-        res.on('error', reject);
-      })
-      .on('error', reject);
-  });
+function randomUA() {
+  return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
 }
 
-async function retry(fn, retries = 3) {
+// ---------- HTTP 请求 ----------
+
+async function fetchHTML(url, retries = 3) {
   for (let i = 0; i < retries; i++) {
-    try { return await fn(); } catch (e) {
+    try {
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': randomUA(),
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        },
+        redirect: 'follow',
+        signal: AbortSignal.timeout(15000),
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${url}`);
+      }
+      return await res.text();
+    } catch (e) {
       if (i === retries - 1) throw e;
+      console.log(`    ⚠️ 重试 ${i + 1}/${retries}: ${e.message}`);
       await new Promise((r) => setTimeout(r, 2000 * (i + 1)));
     }
   }
@@ -33,33 +47,99 @@ async function retry(fn, retries = 3) {
 // ---------- 从首页获取最新文章链接 ----------
 
 async function getLatestPostUrl() {
-  const html = await retry(() => httpsGet('https://www.mibei77.com/'));
+  console.log('  🔍 正在请求首页...');
+  const html = await fetchHTML(BASE_URL);
+  const $ = cheerio.load(html);
 
-  // 匹配文章链接，格式：https://www.mibei77.com/348.html
-  const matches = html.match(/href="(https:\/\/www\.mibei77\.com\/\d+\.html)"/g);
-  if (!matches || matches.length === 0) {
-    throw new Error('未找到文章链接');
+  // 用 CSS 选择器查找文章链接，比正则更健壮
+  const articleLinks = [];
+  $('a[href*=".html"]').each((_, el) => {
+    const href = $(el).attr('href');
+    if (href) {
+      // 解析相对路径和绝对路径
+      const fullUrl = href.startsWith('http') ? href : new URL(href, BASE_URL).href;
+      // 匹配文章详情页：数字.html
+      if (/\/\d+\.html$/.test(fullUrl) && fullUrl.includes('mibei77.com')) {
+        articleLinks.push(fullUrl);
+      }
+    }
+  });
+
+  if (articleLinks.length === 0) {
+    // 降级：用正则兜底
+    console.log('    ⚠️ CSS 选择器未找到，使用正则降级...');
+    const regexMatches = html.match(/href="(https:\/\/www\.mibei77\.com\/\d+\.html)"/g);
+    if (regexMatches && regexMatches.length > 0) {
+      const url = regexMatches[0].match(/href="([^"]+)"/)[1];
+      return url;
+    }
+    throw new Error('未找到文章链接，页面结构可能已变更');
   }
 
-  // 提取第一个链接
-  const url = matches[0].match(/href="([^"]+)"/)[1];
-  return url;
+  // 去重并按数字 ID 降序排列，取最新的
+  const unique = [...new Set(articleLinks)];
+  unique.sort((a, b) => {
+    const idA = parseInt(a.match(/(\d+)\.html$/)[1]);
+    const idB = parseInt(b.match(/(\d+)\.html$/)[1]);
+    return idB - idA;
+  });
+
+  const latestUrl = unique[0];
+  console.log(`    ✅ 找到 ${unique.length} 篇文章，最新: ${latestUrl}`);
+  return latestUrl;
 }
 
 // ---------- 从文章页面提取订阅链接 ----------
 
 async function extractSubLinks(postUrl) {
-  const html = await retry(() => httpsGet(postUrl));
+  console.log('  🔍 正在请求文章页...');
+  const html = await fetchHTML(postUrl);
+  const $ = cheerio.load(html);
 
-  // 提取 V2Ray 订阅链接
-  const v2rayMatch = html.match(/https:\/\/mm\.mibei77\.com\/[^\s"<>]+\.txt/);
-  // 提取 Clash 订阅链接
-  const clashMatch = html.match(/https:\/\/mm\.mibei77\.com\/[^\s"<>]+\.yaml/);
+  let v2ray = null;
+  let clash = null;
 
-  return {
-    v2ray: v2rayMatch ? v2rayMatch[0] : null,
-    clash: clashMatch ? clashMatch[0] : null,
-  };
+  // 方案1：在 class="entry-content" 或其他正文容器中查找
+  const contentSelectors = ['.entry-content', '.post-content', '.article-content', 'article', 'body'];
+
+  for (const selector of contentSelectors) {
+    const container = $(selector);
+    if (container.length === 0) continue;
+
+    const text = container.text();
+    const links = [];
+
+    // 查找所有带 .txt 或 .yaml 的链接
+    container.find('a').each((_, el) => {
+      const href = $(el).attr('href') || '';
+      links.push(href);
+    });
+
+    // 从链接列表中提取
+    for (const link of links) {
+      if (!v2ray && /\.txt(\?|$)/.test(link)) {
+        v2ray = link;
+      }
+      if (!clash && /\.yaml(\?|$)/.test(link)) {
+        clash = link;
+      }
+      if (v2ray && clash) break;
+    }
+
+    // 也从纯文本中匹配（有些网站链接不在 a 标签中）
+    if (!v2ray) {
+      const txtMatch = text.match(/https:\/\/[^\s"'<>]+\.txt(\?[^\s"'<>]*)?/);
+      if (txtMatch) v2ray = txtMatch[0];
+    }
+    if (!clash) {
+      const yamlMatch = text.match(/https:\/\/[^\s"'<>]+\.yaml(\?[^\s"'<>]*)?/);
+      if (yamlMatch) clash = yamlMatch[0];
+    }
+
+    if (v2ray && clash) break;
+  }
+
+  return { v2ray, clash };
 }
 
 // ---------- 生成 Markdown ----------
@@ -77,9 +157,8 @@ function generateMarkdown(links, postUrl) {
     hour: '2-digit',
     minute: '2-digit',
   });
-
-  // 修复：sv-SE locale 已包含秒数，不需要再加 :00
-  const pubDate = now.toLocaleString('sv-SE', { timeZone: 'Asia/Shanghai' }).replace(' ', 'T') + '+08:00';
+  const pubDate =
+    now.toLocaleString('sv-SE', { timeZone: 'Asia/Shanghai' }).replace(' ', 'T') + '+08:00';
 
   return `---
 title: "米贝每日节点"
@@ -134,16 +213,22 @@ async function main() {
 
   try {
     // 1. 获取最新文章链接
-    console.log('  🔍 获取最新文章链接...');
     const postUrl = await getLatestPostUrl();
-    console.log(`    📄 最新文章: ${postUrl}`);
 
     // 2. 提取订阅链接
     console.log('  🔍 提取订阅链接...');
     const links = await extractSubLinks(postUrl);
 
-    if (links.v2ray) console.log(`    ✅ V2Ray: ${links.v2ray.substring(0, 50)}...`);
-    if (links.clash) console.log(`    ✅ Clash: ${links.clash.substring(0, 50)}...`);
+    if (links.v2ray) {
+      console.log(`    ✅ V2Ray: ${links.v2ray.substring(0, 60)}...`);
+    } else {
+      console.log('    ⚠️ 未找到 V2Ray 链接');
+    }
+    if (links.clash) {
+      console.log(`    ✅ Clash: ${links.clash.substring(0, 60)}...`);
+    } else {
+      console.log('    ⚠️ 未找到 Clash 链接');
+    }
 
     // 3. 生成 Markdown
     const markdown = generateMarkdown(links, postUrl);

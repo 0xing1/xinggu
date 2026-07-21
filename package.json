@@ -19,7 +19,9 @@
     "@astrojs/sitemap": "^3.0.0",
     "@pagefind/default-ui": "^1.5.2",
     "astro": "^6.0.0",
-    "pagefind": "^1.5.2"
+    "cheerio": "^1.2.0",
+    "pagefind": "^1.5.2",
+    "rss-parser": "^3.13.0"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
