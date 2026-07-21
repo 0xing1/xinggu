@@ -1,8 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 
-// ---------- 配置 ----------
-
 const SOURCES = [
   {
     name: 'V2Ray',
@@ -23,8 +21,6 @@ const SOURCES = [
     description: '高速 V2Ray 订阅（每3天更新）',
   },
 ];
-
-// ---------- HTTP 请求 ----------
 
 async function apiGet(url, retries = 3) {
   for (let i = 0; i < retries; i++) {
@@ -52,8 +48,6 @@ async function apiGet(url, retries = 3) {
   }
 }
 
-// ---------- 内容获取 ----------
-
 async function fetchSubContent(source) {
   const apiUrl = `https://api.github.com/repos/${source.repo}/contents/${source.filePath}`;
   const body = await apiGet(apiUrl);
@@ -67,8 +61,6 @@ async function fetchSubContent(source) {
   }
   throw new Error('无法获取内容');
 }
-
-// ---------- 生成 Markdown ----------
 
 function generateMarkdown(results) {
   const now = new Date();
@@ -139,8 +131,6 @@ lang: "zh"
 
   return md;
 }
-
-// ---------- Main ----------
 
 async function main() {
   console.log('📡 开始获取订阅（每小时定时）...\n');

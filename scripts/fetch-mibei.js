@@ -56,9 +56,7 @@ async function getLatestPostUrl() {
   $('a[href*=".html"]').each((_, el) => {
     const href = $(el).attr('href');
     if (href) {
-      // 解析相对路径和绝对路径
       const fullUrl = href.startsWith('http') ? href : new URL(href, BASE_URL).href;
-      // 匹配文章详情页：数字.html
       if (/\/\d+\.html$/.test(fullUrl) && fullUrl.includes('mibei77.com')) {
         articleLinks.push(fullUrl);
       }
@@ -66,7 +64,6 @@ async function getLatestPostUrl() {
   });
 
   if (articleLinks.length === 0) {
-    // 降级：用正则兜底
     console.log('    ⚠️ CSS 选择器未找到，使用正则降级...');
     const regexMatches = html.match(/href="(https:\/\/www\.mibei77\.com\/\d+\.html)"/g);
     if (regexMatches && regexMatches.length > 0) {
@@ -76,7 +73,6 @@ async function getLatestPostUrl() {
     throw new Error('未找到文章链接，页面结构可能已变更');
   }
 
-  // 去重并按数字 ID 降序排列，取最新的
   const unique = [...new Set(articleLinks)];
   unique.sort((a, b) => {
     const idA = parseInt(a.match(/(\d+)\.html$/)[1]);
@@ -99,7 +95,6 @@ async function extractSubLinks(postUrl) {
   let v2ray = null;
   let clash = null;
 
-  // 方案1：在 class="entry-content" 或其他正文容器中查找
   const contentSelectors = ['.entry-content', '.post-content', '.article-content', 'article', 'body'];
 
   for (const selector of contentSelectors) {
@@ -109,13 +104,11 @@ async function extractSubLinks(postUrl) {
     const text = container.text();
     const links = [];
 
-    // 查找所有带 .txt 或 .yaml 的链接
     container.find('a').each((_, el) => {
       const href = $(el).attr('href') || '';
       links.push(href);
     });
 
-    // 从链接列表中提取
     for (const link of links) {
       if (!v2ray && /\.txt(\?|$)/.test(link)) {
         v2ray = link;
@@ -126,7 +119,6 @@ async function extractSubLinks(postUrl) {
       if (v2ray && clash) break;
     }
 
-    // 也从纯文本中匹配（有些网站链接不在 a 标签中）
     if (!v2ray) {
       const txtMatch = text.match(/https:\/\/[^\s"'<>]+\.txt(\?[^\s"'<>]*)?/);
       if (txtMatch) v2ray = txtMatch[0];
@@ -212,10 +204,8 @@ async function main() {
   console.log('📡 开始获取米贝每日节点...\n');
 
   try {
-    // 1. 获取最新文章链接
     const postUrl = await getLatestPostUrl();
 
-    // 2. 提取订阅链接
     console.log('  🔍 提取订阅链接...');
     const links = await extractSubLinks(postUrl);
 
@@ -230,16 +220,13 @@ async function main() {
       console.log('    ⚠️ 未找到 Clash 链接');
     }
 
-    // 3. 生成 Markdown
     const markdown = generateMarkdown(links, postUrl);
 
-    // 4. 写入文件
     const outPath = path.join(process.cwd(), 'src', 'content', 'blog', 'zh', 'mibei', 'index.md');
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
     fs.writeFileSync(outPath, markdown, 'utf-8');
     console.log(`\n✅ 已写入 ${outPath}`);
 
-    // 5. 设置 GitHub Actions 输出
     if (process.env.GITHUB_OUTPUT) {
       fs.appendFileSync(process.env.GITHUB_OUTPUT, 'changed=true\n');
     }

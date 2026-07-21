@@ -4,8 +4,6 @@ import path from 'path';
 const STATE_PATH = path.join(process.cwd(), 'scripts', '.sub-state.json');
 const SOURCES_PATH = path.join(process.cwd(), 'scripts', 'sub-sources.json');
 
-// ---------- HTTP 请求 ----------
-
 async function httpGet(url, headers = {}, retries = 3) {
   for (let i = 0; i < retries; i++) {
     try {
@@ -32,8 +30,6 @@ async function httpGet(url, headers = {}, retries = 3) {
   }
 }
 
-// ---------- GitHub API ----------
-
 async function getLatestCommit(repo) {
   const body = await httpGet(`https://api.github.com/repos/${repo}/commits?per_page=1`, {
     Accept: 'application/vnd.github.v3+json',
@@ -56,16 +52,11 @@ async function fetchUrl(url) {
   return await httpGet(url);
 }
 
-// ---------- 上游链接提取 ----------
-
 async function extractLatestSubUrl(repo) {
   const readme = await fetchGitHubFile(repo, 'README.md');
-  // 匹配 "免费Clash订阅链接" 后面代码块中的URL
   const match = readme.match(/免费Clash订阅链接[\s\S]*?```\s*\n?(https?:\/\/[^\s`]+)\s*\n?```/i);
   return match ? match[1].trim() : null;
 }
-
-// ---------- Base64 解码 ----------
 
 function decodeBase64(str) {
   try {
@@ -75,8 +66,6 @@ function decodeBase64(str) {
     return str;
   }
 }
-
-// ---------- Markdown 生成 ----------
 
 function makeDateStr() {
   const now = new Date();
@@ -176,19 +165,14 @@ ${nodeContent.trim()}
 `;
 }
 
-// ---------- Main ----------
-
 async function main() {
   const sources = JSON.parse(fs.readFileSync(SOURCES_PATH, 'utf-8'));
 
-  // 加载状态
   let state = {};
   if (fs.existsSync(STATE_PATH)) {
     try {
       state = JSON.parse(fs.readFileSync(STATE_PATH, 'utf-8'));
-    } catch {
-      // 状态文件损坏则重置
-    }
+    } catch {}
   }
 
   let anyChanged = false;
@@ -196,7 +180,6 @@ async function main() {
   for (const src of sources) {
     console.log(`\n🔍 检查 ${src.name} (${src.repo})...`);
 
-    // 检查最新提交
     let latestSha;
     try {
       latestSha = await getLatestCommit(src.repo);
@@ -231,7 +214,6 @@ async function main() {
       markdown = genGitHubPost(src, results);
     } else {
       try {
-        // 从上游 README 提取最新订阅链接
         let latestUrl = src.url;
         try {
           const extracted = await extractLatestSubUrl(src.repo);
@@ -250,7 +232,6 @@ async function main() {
         markdown = genUrlPost({ ...src, url: latestUrl }, content);
         console.log(`    ✅ 获取成功`);
 
-        // URL 变了则更新配置
         if (latestUrl !== src.url) {
           src.url = latestUrl;
           fs.writeFileSync(SOURCES_PATH, JSON.stringify(sources, null, 2) + '\n', 'utf-8');
@@ -262,17 +243,14 @@ async function main() {
       }
     }
 
-    // 写入博客文件
     const outPath = path.join(process.cwd(), 'src', 'content', 'blog', 'zh', src.name, 'index.md');
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
     fs.writeFileSync(outPath, markdown, 'utf-8');
     console.log(`  📝 已写入 ${src.name}/index.md`);
 
-    // 更新状态
     state[src.name] = latestSha;
   }
 
-  // 保存状态
   fs.writeFileSync(STATE_PATH, JSON.stringify(state, null, 2) + '\n', 'utf-8');
 
   if (!anyChanged) {
