@@ -1,8 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import https from 'https';
 
-// 前两个源：每小时定时更新
 const SOURCES = [
   {
     name: 'V2Ray',
@@ -24,58 +22,42 @@ const SOURCES = [
   },
 ];
 
-function apiGet(url) {
-  return new Promise((resolve, reject) => {
-    https
-      .get(
-        url,
-        {
-          headers: {
-            'User-Agent': 'sub-crawler/1.0',
-            Accept: 'application/vnd.github.v3+json',
-          },
-        },
-        (res) => {
-          if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-            return apiGet(res.headers.location).then(resolve, reject);
-          }
-          if (res.statusCode !== 200) {
-            return reject(new Error(`HTTP ${res.statusCode}`));
-          }
-          const chunks = [];
-          res.on('data', (chunk) => chunks.push(chunk));
-          res.on('end', () => resolve(Buffer.concat(chunks).toString()));
-          res.on('error', reject);
-        }
-      )
-      .on('error', reject);
-  });
-}
-
-async function fetchWithRetry(url, retries = 3) {
+async function apiGet(url, retries = 3) {
   for (let i = 0; i < retries; i++) {
     try {
-      return await apiGet(url);
-    } catch (err) {
-      if (i < retries - 1) {
-        await new Promise((r) => setTimeout(r, 2000 * (i + 1)));
-      } else {
-        throw err;
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': 'sub-crawler/1.0',
+          Accept: 'application/vnd.github.v3+json',
+        },
+        signal: AbortSignal.timeout(15000),
+      });
+
+      if (res.status >= 300 && res.status < 400 && res.headers.get('location')) {
+        return await apiGet(res.headers.get('location'), retries);
       }
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      return await res.text();
+    } catch (e) {
+      if (i === retries - 1) throw e;
+      console.log(`    ⚠️ 重试 ${i + 1}/${retries}: ${e.message}`);
+      await new Promise((r) => setTimeout(r, 2000 * (i + 1)));
     }
   }
 }
 
 async function fetchSubContent(source) {
   const apiUrl = `https://api.github.com/repos/${source.repo}/contents/${source.filePath}`;
-  const body = await fetchWithRetry(apiUrl);
+  const body = await apiGet(apiUrl);
   const json = JSON.parse(body);
 
   if (json.content) {
     return Buffer.from(json.content, 'base64').toString('utf-8');
   }
   if (json.download_url) {
-    return await fetchWithRetry(json.download_url);
+    return await apiGet(json.download_url);
   }
   throw new Error('无法获取内容');
 }
@@ -129,9 +111,9 @@ lang: "zh"
       md += `\`\`\`\nhttps://raw.githubusercontent.com/${result.repo}/main/${result.filePath}\n\`\`\`\n\n`;
 
       md += `**节点列表：**\n\n`;
-      md += '\`\`\`\n';
+      md += '```\n';
       md += result.content.trim();
-      md += '\n\`\`\`\n\n';
+      md += '\n```\n\n';
     }
 
     md += `---\n\n`;
@@ -169,16 +151,7 @@ async function main() {
 
   const markdown = generateMarkdown(results);
 
-  const outPath = path.join(
-    process.cwd(),
-    'src',
-    'content',
-    'blog',
-    'zh',
-    'sub',
-    'index.md'
-  );
-
+  const outPath = path.join(process.cwd(), 'src', 'content', 'blog', 'zh', 'sub', 'index.md');
   fs.writeFileSync(outPath, markdown, 'utf-8');
   console.log(`\n✅ 已写入 ${outPath}`);
 }
